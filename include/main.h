@@ -55,3 +55,7 @@ void opcontrol(void);
 #endif  // _PROS_MAIN_H_
 
 std::shared_ptr<OdomChassisController> chassis;
+okapi::Controller controller;
+
+pros::ADIDigitalOut clamp('H');
+okapi::MotorGroup intake ({6,-7});

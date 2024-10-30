@@ -38,6 +38,10 @@ static lv_res_t btn_click_action(lv_obj_t *btn)
 
 #pragma endregion
 
+bool l1;
+bool r1;
+bool r2;
+
 void initialize()
 {
 #pragma region lvgl
@@ -124,12 +128,17 @@ void initialize()
 
 	chassis = ChassisControllerBuilder()
 				  .withMotors(
-					  {-1,-2,3,-4}, // left Motors
-					  {12,13,-14,15} // right Motors
+					  {-1,-2,3}, // left Motors
+					  {12,13,-14} // right Motors
 					  )
-				  .withDimensions({AbstractMotor::gearset::blue, gearRatio}, {{4_in, 10.85_in * 3.333333}, imev5BlueTPR / gearRatio})
+				  .withDimensions({okapi::AbstractMotor::gearset::blue, gearRatio}, {{4_in, 10.85_in * 3.333333}, imev5BlueTPR / gearRatio})
 				  .withOdometry()
 				  .buildOdometry();
+				  
+l1 = false;
+r1 = false;
+r2 = false;
+
 #pragma endregion
 }
 
@@ -138,7 +147,8 @@ void disabled() {}
 void competition_initialize() {}
 
 void autonomous() 
-{//llchassis.setPose(0,0,0);
+{
+	//llchassis.setPose(0,0,0);
 	chassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
 	chassis->setMaxVelocity(400);
 
@@ -161,20 +171,41 @@ void autonomous()
 
 inline void updateDrive()
 {
-	int32_t leftC = -1 * sqrt(16129-pow(controller.getAnalog(ControllerAnalog::leftY),2)) + 127;
-	int32_t rightC = -1 * sqrt(16129-pow(controller.getAnalog(ControllerAnalog::rightY),2)) + 127;
+	float leftC = controller.getAnalog(ControllerAnalog::leftY);
+	float rightC = controller.getAnalog(ControllerAnalog::rightY);
 	chassis->getModel()->tank(
 		leftC,
 		rightC
 	);
 }
 
+inline void updateClamp()
+{
+	bool newL1 = controller.getDigital(ControllerDigital::L1); //clamp
+	if(newL1 != l1)
+	{
+		l1 = newL1;
+		clamp.set_value(newL1);
+	}
+}
+inline void updateIntake()
+{
+	bool newR1 = controller.getDigital(ControllerDigital::R1); //intake
+	bool newR2 = controller.getDigital(ControllerDigital::R2); //outtake
+	
+	intake.moveVoltage((
+		(-12000 * newR1) + (12000 * newR2)));
+	r1 = newR1;
+	r2 = newR2;
+}
 void opcontrol() {
 	chassis->setMaxVelocity(600);
 
 	while (true)
 	{
 		updateDrive();
+		updateClamp();
+		updateIntake();
 		pros::delay(1);
 	}
 }
