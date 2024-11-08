@@ -58,4 +58,5 @@ std::shared_ptr<OdomChassisController> chassis;
 okapi::Controller controller;
 
 pros::ADIDigitalOut clamp('H');
-okapi::MotorGroup intake ({6,-7});
+okapi::MotorGroup intake ({-10});
+okapi::MotorGroup stage2 ({11});

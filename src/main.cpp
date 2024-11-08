@@ -128,8 +128,8 @@ void initialize()
 
 	chassis = ChassisControllerBuilder()
 				  .withMotors(
-					  {-1,-2,3}, // left Motors
-					  {12,13,-14} // right Motors
+					  {19,16,-15}, // left Motors
+					  {-20,-17,18} // right Motors
 					  )
 				  .withDimensions({okapi::AbstractMotor::gearset::blue, gearRatio}, {{4_in, 10.85_in * 3.333333}, imev5BlueTPR / gearRatio})
 				  .withOdometry()
@@ -178,14 +178,22 @@ inline void updateDrive()
 		rightC
 	);
 }
-
+bool activated = false;
 inline void updateClamp()
 {
 	bool newL1 = controller.getDigital(ControllerDigital::L1); //clamp
-	if(newL1 != l1)
+	if(newL1 == true)
 	{
-		l1 = newL1;
-		clamp.set_value(newL1);
+		if(activated == false)
+		{
+			l1 = !l1;
+			clamp.set_value(l1);
+			activated = true;
+		}
+	}
+	else
+	{
+		activated = false;
 	}
 }
 inline void updateIntake()
@@ -194,7 +202,10 @@ inline void updateIntake()
 	bool newR2 = controller.getDigital(ControllerDigital::R2); //outtake
 	
 	intake.moveVoltage((
-		(-12000 * newR1) + (12000 * newR2)));
+		(12000 * newR1) + (-12000 * newR2)));
+		
+	stage2.moveVoltage((
+		0.75 * ((12000 * newR1) + (-12000 * newR2))));
 	r1 = newR1;
 	r2 = newR2;
 }
