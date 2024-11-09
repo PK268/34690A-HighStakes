@@ -1,6 +1,7 @@
 #include "main.h"
-#include "vkrlogo_resize.c"
-#include "liblvgl/lvgl.h"
+#include "vkrlogo_resize.c" 
+#include "liblvgl/lvgl.h" 
+#include "lemlib/api.hpp" 
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +42,62 @@ static lv_res_t btn_click_action(lv_obj_t *btn)
 bool l1;
 bool r1;
 bool r2;
+
+#pragma region lemlib
+
+// imu
+pros::Imu imu(10);
+
+pros::MotorGroup left_motors({-20,-17,18},pros::MotorGearset::blue); 
+pros::MotorGroup right_motors({19,16,-15},pros::MotorGearset::blue); 
+
+lemlib::Drivetrain drivetrain(&left_motors, // left motor group
+                              &right_motors, // right motor group
+                              11.875, // 11.875 inch track width
+                              lemlib::Omniwheel::NEW_275, // using new 2.75" omnis
+                              450, // drivetrain rpm is 360
+                              2 // horizontal drift is 2 (for now)
+);
+
+lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel 1, set to null
+                            nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
+                            nullptr, // horizontal tracking wheel 1
+                            nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
+                            nullptr // inertial sensor
+);
+
+// lateral PID controller
+lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
+                                              0, // integral gain (kI)
+                                              3, // derivative gain (kD)
+                                              3, // anti windup
+                                              1, // small error range, in inches
+                                              100, // small error range timeout, in milliseconds
+                                              3, // large error range, in inches
+                                              500, // large error range timeout, in milliseconds
+                                              20 // maximum acceleration (slew)
+);
+
+// angular PID controller
+lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
+                                              0, // integral gain (kI)
+                                              10, // derivative gain (kD)
+                                              3, // anti windup
+                                              1, // small error range, in degrees
+                                              100, // small error range timeout, in milliseconds
+                                              3, // large error range, in degrees
+                                              500, // large error range timeout, in milliseconds
+                                              0 // maximum acceleration (slew)
+);
+
+// create the chassis
+lemlib::Chassis llchassis(drivetrain, // drivetrain settings
+                        lateral_controller, // lateral PID settings
+                        angular_controller, // angular PID settings
+                        sensors // odometry sensors
+);
+
+#pragma endregion
 
 void initialize()
 {
@@ -122,14 +179,17 @@ void initialize()
 	lv_label_set_text(myButtonLabel, "SELECT");		 // sets label text
 #pragma endregion
 #pragma endregion
+#pragma region lemlib
 
+
+#pragma endregion
 #pragma region OKAPI
 	double gearRatio = 36.0/48.0;
 
-	chassis = ChassisControllerBuilder()
+	odomChassis = ChassisControllerBuilder()
 				  .withMotors(
-					  {19,16,-15}, // left Motors
-					  {-20,-17,18} // right Motors
+					  {-20,-17,18}, // left Motors
+					  {19,16,-15} // right Motors
 					  )
 				  .withDimensions({okapi::AbstractMotor::gearset::blue, gearRatio}, {{4_in, 10.85_in * 3.333333}, imev5BlueTPR / gearRatio})
 				  .withOdometry()
@@ -149,8 +209,8 @@ void competition_initialize() {}
 void autonomous() 
 {
 	//llchassis.setPose(0,0,0);
-	chassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
-	chassis->setMaxVelocity(400);
+	odomChassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
+	odomChassis->setMaxVelocity(400);
 
 	switch (autonNumber)
 	{
@@ -173,10 +233,13 @@ inline void updateDrive()
 {
 	float leftC = controller.getAnalog(ControllerAnalog::leftY);
 	float rightC = controller.getAnalog(ControllerAnalog::rightY);
-	chassis->getModel()->tank(
+	chassis.tank(leftC, rightC);
+	/*
+	odomChassis->getModel()->tank(
 		leftC,
 		rightC
 	);
+	*/
 }
 bool activated = false;
 inline void updateClamp()
@@ -196,6 +259,25 @@ inline void updateClamp()
 		activated = false;
 	}
 }
+bool l2 = false;
+bool activatedDoinker = false;
+inline void updateDoinker()
+{
+	bool newL2 = controller.getDigital(ControllerDigital::L2); //clamp
+	if(newL2 == true)
+	{
+		if(activatedDoinker == false)
+		{
+			l2 = !l2;
+			doinker.set_value(l2);
+			activatedDoinker = true;
+		}
+	}
+	else
+	{
+		activatedDoinker = false;
+	}
+}
 inline void updateIntake()
 {
 	bool newR1 = controller.getDigital(ControllerDigital::R1); //intake
@@ -205,18 +287,19 @@ inline void updateIntake()
 		(12000 * newR1) + (-12000 * newR2)));
 		
 	stage2.moveVoltage((
-		0.75 * ((12000 * newR1) + (-12000 * newR2))));
+		1 * ((12000 * newR1) + (-12000 * newR2))));
 	r1 = newR1;
 	r2 = newR2;
 }
 void opcontrol() {
-	chassis->setMaxVelocity(600);
+	odomChassis->setMaxVelocity(600);
 
 	while (true)
 	{
 		updateDrive();
 		updateClamp();
 		updateIntake();
+		updateDoinker();
 		pros::delay(1);
 	}
 }
