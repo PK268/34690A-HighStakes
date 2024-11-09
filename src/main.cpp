@@ -8,7 +8,8 @@
 #include <string.h>
 
 
-/*
+int autonNumber = -1;
+
 #pragma region lvgl
 
 lv_obj_t *myButton;
@@ -39,8 +40,7 @@ static lv_res_t btn_click_action(lv_obj_t *btn)
 }
 
 #pragma endregion
-*/
-int autonNumber = -1;
+
 bool l1;
 bool r1;
 bool r2;
@@ -73,21 +73,21 @@ lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP) 12
                                               0.1, // derivative gain (kD) 3
                                               0, // anti windup
                                               0, // small error range, in inches
-                                              0, // small error range timeout, in milliseconds
+                                              100, // small error range timeout, in milliseconds
                                               0, // large error range, in inches
-                                              0, // large error range timeout, in milliseconds
+                                              500, // large error range timeout, in milliseconds
                                               0 // maximum acceleration (slew)
 );
 
 // angular PID controller
-lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
+lemlib::ControllerSettings angular_controller(0.9, // proportional gain (kP)
                                               0, // integral gain (kI)
-                                              10, // derivative gain (kD)
+                                              0.5, // derivative gain (kD)
                                               0, // anti windup
                                               0, // small error range, in inches
-                                              0, // small error range timeout, in milliseconds
+                                              100, // small error range timeout, in milliseconds
                                               0, // large error range, in inches
-                                              0, // large error range timeout, in milliseconds
+                                              500, // large error range timeout, in milliseconds
                                               0 // maximum acceleration (slew)
 );
 
@@ -102,7 +102,7 @@ lemlib::Chassis llchassis(drivetrain, // drivetrain settings
 
 void initialize()
 {
-/*
+
 #pragma region lvgl
 #pragma region styles
 
@@ -186,7 +186,7 @@ void initialize()
 
 #pragma endregion
 
-*/
+
 #pragma region lemlib
 
 #pragma endregion
@@ -201,7 +201,7 @@ void initialize()
 				  .withDimensions({okapi::AbstractMotor::gearset::blue, gearRatio}, {{2.75_in, 11.875_in}, 450})
 				  .withOdometry()
 				  .buildOdometry();
-				  
+			  
 l1 = false;
 r1 = false;
 r2 = false;
@@ -218,20 +218,12 @@ void competition_initialize() {}
 void autonomous() 
 {
 	llchassis.setPose(0,0,0);
-
-
-
-	llchassis.(0, 24, 2000);
-
-
-  pros::lcd::initialize();
-	while (true)
-	{
-		pros::lcd::print(0, "X: %f", llchassis.getPose().x); // x
-            pros::lcd::print(1, "Y: %f", llchassis.getPose().y); // y
-            pros::lcd::print(2, "Theta: %f", llchassis.getPose().theta); // heading
-	}
-
+	
+    //llchassis.moveToPoint(0, 12, 10000);
+	llchassis.turnToHeading(180, 100000);
+	
+    //llchassis.moveToPoint(0, 0, 10000);
+	//llchassis.turnToHeading(0, 100000);
 	odomChassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
 	odomChassis->setMaxVelocity(400);
 
