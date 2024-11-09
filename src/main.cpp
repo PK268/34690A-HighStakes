@@ -158,10 +158,10 @@ void initialize()
 	// Roller
 	roller1 = lv_roller_create(lv_scr_act(), NULL);
 	lv_roller_set_options(roller1,
-						  "Close Side\n"
-						  "Disrupt\n"
-						  "Push Forward\n"
-						  "5 ball (don't use)");
+						  "Slot 1\n"
+						  "Slot 2\n"
+						  "Slot 3\n"
+						  "Slot 4");
 
 	lv_roller_set_visible_row_count(roller1, 6);
 	lv_obj_align(roller1, NULL, LV_ALIGN_IN_LEFT_MID, 0, 0);
@@ -219,11 +219,6 @@ void autonomous()
 {
 	llchassis.setPose(0,0,0);
 	
-    //llchassis.moveToPoint(0, 12, 10000);
-	llchassis.turnToHeading(180, 100000);
-	
-    //llchassis.moveToPoint(0, 0, 10000);
-	//llchassis.turnToHeading(0, 100000);
 	odomChassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
 	odomChassis->setMaxVelocity(400);
 
@@ -315,13 +310,8 @@ inline void updateForceOpen()
 }
 void opcontrol() {
 	odomChassis->setMaxVelocity(600);
-  pros::lcd::initialize();
 	while (true)
 	{
-		pros::lcd::print(0, "X: %f", llchassis.getPose().x); // x
-            pros::lcd::print(1, "Y: %f", llchassis.getPose().y); // y
-            pros::lcd::print(2, "Theta: %f", llchassis.getPose().theta); // heading
-
 		updateDrive();
 		updateClamp();
 		updateIntake();
