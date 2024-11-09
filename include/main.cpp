@@ -8,7 +8,6 @@
 #include <string.h>
 
 
-/*
 #pragma region lvgl
 
 lv_obj_t *myButton;
@@ -24,7 +23,7 @@ lv_style_t rollerSelected;
 
 lv_style_t bg;
 
-
+int autonNumber = -1;
 
 static lv_res_t btn_click_action(lv_obj_t *btn)
 {
@@ -39,8 +38,7 @@ static lv_res_t btn_click_action(lv_obj_t *btn)
 }
 
 #pragma endregion
-*/
-int autonNumber = -1;
+
 bool l1;
 bool r1;
 bool r2;
@@ -48,16 +46,16 @@ bool r2;
 #pragma region lemlib
 
 // imu
-pros::Imu imu(9);
+pros::Imu imu(10);
 
-pros::MotorGroup left_motors({-20,-17,18}); 
-pros::MotorGroup right_motors({19,16,-15}); 
+pros::MotorGroup left_motors({-20,-17,18},pros::MotorGearset::blue); 
+pros::MotorGroup right_motors({19,16,-15},pros::MotorGearset::blue); 
 
 lemlib::Drivetrain drivetrain(&left_motors, // left motor group
                               &right_motors, // right motor group
                               11.875, // 11.875 inch track width
                               lemlib::Omniwheel::NEW_275, // using new 2.75" omnis
-                              450, // drivetrain rpm is 450
+                              450, // drivetrain rpm is 360
                               2 // horizontal drift is 2 (for now)
 );
 
@@ -65,29 +63,30 @@ lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel 1, set to null
                             nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
                             nullptr, // horizontal tracking wheel 1
                             nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
-                            &imu // inertial sensor
+                            nullptr // inertial sensor
 );
- 
-lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP) 12
-                                              0.03, // integral gain (kI)
-                                              0.1, // derivative gain (kD) 3
-                                              0, // anti windup
-                                              0, // small error range, in inches
-                                              0, // small error range timeout, in milliseconds
-                                              0, // large error range, in inches
-                                              0, // large error range timeout, in milliseconds
-                                              0 // maximum acceleration (slew)
+
+// lateral PID controller
+lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
+                                              0, // integral gain (kI)
+                                              3, // derivative gain (kD)
+                                              3, // anti windup
+                                              1, // small error range, in inches
+                                              100, // small error range timeout, in milliseconds
+                                              3, // large error range, in inches
+                                              500, // large error range timeout, in milliseconds
+                                              20 // maximum acceleration (slew)
 );
 
 // angular PID controller
 lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
                                               0, // integral gain (kI)
                                               10, // derivative gain (kD)
-                                              0, // anti windup
-                                              0, // small error range, in inches
-                                              0, // small error range timeout, in milliseconds
-                                              0, // large error range, in inches
-                                              0, // large error range timeout, in milliseconds
+                                              3, // anti windup
+                                              1, // small error range, in degrees
+                                              100, // small error range timeout, in milliseconds
+                                              3, // large error range, in degrees
+                                              500, // large error range timeout, in milliseconds
                                               0 // maximum acceleration (slew)
 );
 
@@ -102,10 +101,8 @@ lemlib::Chassis llchassis(drivetrain, // drivetrain settings
 
 void initialize()
 {
-/*
 #pragma region lvgl
 #pragma region styles
-
 	// Screen BG
 	lv_style_copy(&bg, &lv_style_plain);
 	bg.body.main_color = LV_COLOR_BLACK;
@@ -145,7 +142,6 @@ void initialize()
 	selectBtnPR.text.color = LV_COLOR_MAKE(255, 255, 255);
 
 #pragma endregion
-
 #pragma region initilization
 	// Screen bg
 	lv_obj_set_style(lv_scr_act(), &bg);
@@ -182,12 +178,9 @@ void initialize()
 	myButtonLabel = lv_label_create(myButton, NULL); // create label and puts it inside of the button
 	lv_label_set_text(myButtonLabel, "SELECT");		 // sets label text
 #pragma endregion
-
-
 #pragma endregion
-
-*/
 #pragma region lemlib
+
 
 #pragma endregion
 #pragma region OKAPI
@@ -198,7 +191,7 @@ void initialize()
 					  {-20,-17,18}, // left Motors
 					  {19,16,-15} // right Motors
 					  )
-				  .withDimensions({okapi::AbstractMotor::gearset::blue, gearRatio}, {{2.75_in, 11.875_in}, 450})
+				  .withDimensions({okapi::AbstractMotor::gearset::blue, gearRatio}, {{4_in, 10.85_in * 3.333333}, imev5BlueTPR / gearRatio})
 				  .withOdometry()
 				  .buildOdometry();
 				  
@@ -207,8 +200,6 @@ r1 = false;
 r2 = false;
 
 #pragma endregion
-
-llchassis.calibrate();
 }
 
 void disabled() {}
@@ -217,21 +208,7 @@ void competition_initialize() {}
 
 void autonomous() 
 {
-	llchassis.setPose(0,0,0);
-
-
-
-	llchassis.(0, 24, 2000);
-
-
-  pros::lcd::initialize();
-	while (true)
-	{
-		pros::lcd::print(0, "X: %f", llchassis.getPose().x); // x
-            pros::lcd::print(1, "Y: %f", llchassis.getPose().y); // y
-            pros::lcd::print(2, "Theta: %f", llchassis.getPose().theta); // heading
-	}
-
+	//llchassis.setPose(0,0,0);
 	odomChassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
 	odomChassis->setMaxVelocity(400);
 
@@ -256,13 +233,13 @@ inline void updateDrive()
 {
 	float leftC = controller.getAnalog(ControllerAnalog::leftY);
 	float rightC = controller.getAnalog(ControllerAnalog::rightY);
-	//chassis.tank(leftC, rightC);
-	
+	chassis.tank(leftC, rightC);
+	/*
 	odomChassis->getModel()->tank(
 		leftC,
 		rightC
 	);
-	
+	*/
 }
 bool activated = false;
 inline void updateClamp()
@@ -310,31 +287,19 @@ inline void updateIntake()
 		(12000 * newR1) + (-12000 * newR2)));
 		
 	stage2.moveVoltage((
-		0.9 * ((12000 * newR1) + (-12000 * newR2))));
+		1 * ((12000 * newR1) + (-12000 * newR2))));
 	r1 = newR1;
 	r2 = newR2;
 }
-inline void updateForceOpen()
-{
-	if(controller.getDigital(ControllerDigital::up))
-	{
-		clamp.set_value(LOW);
-	}
-}
 void opcontrol() {
 	odomChassis->setMaxVelocity(600);
-  pros::lcd::initialize();
+
 	while (true)
 	{
-		pros::lcd::print(0, "X: %f", llchassis.getPose().x); // x
-            pros::lcd::print(1, "Y: %f", llchassis.getPose().y); // y
-            pros::lcd::print(2, "Theta: %f", llchassis.getPose().theta); // heading
-
 		updateDrive();
 		updateClamp();
 		updateIntake();
 		updateDoinker();
-		updateForceOpen();
 		pros::delay(1);
 	}
 }
