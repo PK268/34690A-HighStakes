@@ -158,8 +158,8 @@ void initialize()
 	// Roller
 	roller1 = lv_roller_create(lv_scr_act(), NULL);
 	lv_roller_set_options(roller1,
-						  "Slot 1\n"
-						  "Slot 2\n"
+						  "Blue Solo WP\n"
+						  "Red Solo WP\n"
 						  "Slot 3\n"
 						  "Slot 4");
 
@@ -217,19 +217,139 @@ void competition_initialize() {}
 
 void autonomous() 
 {
-	llchassis.setPose(0,0,0);
-	
 	odomChassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
 	odomChassis->setMaxVelocity(400);
-
+	autonNumber = 0;
 	switch (autonNumber)
 	{
 	case 0:
+	{
+	llchassis.setPose(-24,0,315);
+
+	 int maxspeed = 60.0f;
+		//starting at 0, 12+8, 45 deg
+		//move backwards to mogo and grab
+		clamp.set_value(LOW);
+		llchassis.moveToPoint(-3, -27,2000, {.forwards = false,.maxSpeed = 60.0f});
+		pros::delay(1500);
+		clamp.set_value(HIGH);
+		pros::delay(500);
+		llchassis.turnToHeading(270,1000);
+	intake.moveVoltage((
+		(12000)));
+	stage2.moveVoltage((
+		0.9 * ((12000))));
+
+pros::delay(1000);
+		llchassis.moveToPoint(-24,-24,1000, {.maxSpeed = 60.0f});
+pros::delay(1000);
+
+llchassis.turnToHeading(180,1000);
+pros::delay(1000);
+clamp.set_value(LOW);
+pros::delay(500);
+//works till here
+		stage2.moveVoltage(0);
+llchassis.moveToPoint(-24,-36,1000, {.maxSpeed = 60.0f});
+pros::delay(1000);
+
+intake.moveVoltage(0);
+
+		//move all the way back
+		llchassis.moveToPoint(-24,-24,1000, {.forwards = false,.maxSpeed = 70.0f});
+		pros::delay(500);
+
+		llchassis.turnToHeading(315,1000);
+pros::delay(500);
+				llchassis.moveToPoint(18,0,4000, {.forwards = false,.maxSpeed = 60.0f});
+				pros::delay(2000);
+		llchassis.turnToHeading(180,1000);
+		pros::delay(500);
+		llchassis.moveToPoint(26,0,1000,{.forwards = false,.maxSpeed = 60.0f});
+		pros::delay(1000);
+		intake.moveVoltage((
+		12000));
+	stage2.moveVoltage((
+		0.9 * ((12000 ))));
+	pros::delay(1000);
+	llchassis.moveToPoint(26,-40,1000,{.maxSpeed = 60.0f});
+	pros::delay(2000);
 		break;
+	}
 	case 1:
+	{
+	llchassis.setPose(-24,0,315);
+
+		//starting at 0, 12+8, 45 deg
+		//move backwards to mogo and grab
+		clamp.set_value(LOW);
+		llchassis.moveToPoint(-3, -27,2000, {.forwards = false,.maxSpeed = 60.0f});
+		pros::delay(1500);
+		clamp.set_value(HIGH);
+		pros::delay(500);
+		
+		llchassis.turnToHeading(0,1000);
+	intake.moveVoltage((
+		(12000)));
+	stage2.moveVoltage((
+		0.9 * ((12000))));
+
+pros::delay(1000);
+		llchassis.moveToPoint(10,8,1000, {.maxSpeed = 60.0f});
+pros::delay(2000);
+
+llchassis.turnToHeading(90,1000);
+pros::delay(1000);
+clamp.set_value(LOW);
+pros::delay(500);
+
+		stage2.moveVoltage(0);
+		/*
+llchassis.moveToPoint(18,8,1000, {.maxSpeed = 60.0f});
+pros::delay(1200);
+
+intake.moveVoltage(0);
+
+		//move all the way back
+		llchassis.moveToPoint(-30,-20,4000, {.forwards = false,.maxSpeed = 70.0f});
+		pros::delay(2000);
+
+		llchassis.turnToHeading(0,1000);
+pros::delay(1000);
+				llchassis.moveToPoint(-30,-40,4000, {.forwards = false,.maxSpeed = 60.0f});
+				pros::delay(750);
+		llchassis.turnToHeading(90,1000);
+		pros::delay(500);
+		llchassis.moveToPoint(-50,-40,1000,{.forwards = false,.maxSpeed = 60.0f});
+		pros::delay(1000);
+		intake.moveVoltage((
+		12000));
+	stage2.moveVoltage((
+		0.9 * ((12000 ))));
+	pros::delay(10000);
+	llchassis.moveToPoint(26,-40,1000,{.maxSpeed = 60.0f});
+	*/
 		break;
+	}
 	case 2: 
+	{
+	llchassis.setPose(0,0,0);
+		clamp.set_value(LOW);
+		llchassis.moveToPoint(0,-36,2000,{.forwards = false,.maxSpeed = 70.0f});
+		pros::delay(1000);
+		clamp.set_value(HIGH);
+		pros::delay(500);
+		intake.moveVoltage((
+		(12000)));
+	stage2.moveVoltage((
+		0.9 * ((12000))));
+		llchassis.turnToHeading(90,1000);
+		pros::delay(750);
+				llchassis.moveToPoint(24,-36,2000,{.maxSpeed = 70.0f});
+				pros::delay(1000);
+				pros::delay(1000);
 		break;
+	}
 	case 3:
 		break;
 	case 4:
@@ -317,6 +437,6 @@ void opcontrol() {
 		updateIntake();
 		updateDoinker();
 		updateForceOpen();
-		pros::delay(1);
+		pros::delay(10);
 	}
 }
