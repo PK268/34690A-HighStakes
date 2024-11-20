@@ -208,6 +208,8 @@ r2 = false;
 
 #pragma endregion
 
+ladyBrown.setBrakeMode(okapi::AbstractMotor::brakeMode::brake);
+
 llchassis.calibrate();
 }
 
@@ -417,16 +419,60 @@ inline void updateIntake()
 		(12000 * newR1) + (-12000 * newR2)));
 		
 	stage2.moveVoltage((
-		0.9 * ((12000 * newR1) + (-12000 * newR2))));
+		1 * ((12000 * newR1) + (-12000 * newR2))));
 	r1 = newR1;
 	r2 = newR2;
 }
 inline void updateForceOpen()
 {
-	if(controller.getDigital(ControllerDigital::up))
+	if(controller.getDigital(ControllerDigital::Y))
 	{
 		clamp.set_value(LOW);
 	}
+}
+bool activatedLadyBrown = false;
+bool activatedVertLB = false;
+bool activatedRestLB = false;
+void updateLadyBrown() // flat
+{
+		ladyBrown.moveVoltage((12000 * controller.getDigital(ControllerDigital::left) + controller.getDigital(ControllerDigital::right) * -12000));
+	//down d pad makes it go to resting
+	// a makes it go to horizontal
+	// x makes it go to vert
+	if(controller.getDigital(ControllerDigital::A) && !activatedLadyBrown)
+	{
+		activatedLadyBrown = true;
+		//ladyBrown.
+
+		//set position to horizontal
+	}
+	else
+	{
+		activatedLadyBrown = false;
+	}
+
+	if(controller.getDigital(ControllerDigital::X) && !activatedVertLB)
+	{
+		activatedVertLB = true;
+
+		//set position to vert
+	}
+	else
+	{
+		activatedVertLB = false;
+	}
+
+	if(controller.getDigital(ControllerDigital::down) && !activatedRestLB)
+	{
+		activatedRestLB = true;
+
+		//set position to vert
+	}
+	else
+	{
+		activatedRestLB = false;
+	}
+
 }
 void opcontrol() {
 	odomChassis->setMaxVelocity(600);
@@ -437,6 +483,7 @@ void opcontrol() {
 		updateIntake();
 		updateDoinker();
 		updateForceOpen();
+		updateLadyBrown();
 		pros::delay(10);
 	}
 }
