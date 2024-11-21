@@ -433,44 +433,47 @@ inline void updateForceOpen()
 bool activatedLadyBrown = false;
 bool activatedVertLB = false;
 bool activatedRestLB = false;
+bool horizontal = false;
 void updateLadyBrown() // flat
 {
-		ladyBrown.moveVoltage((12000 * controller.getDigital(ControllerDigital::left) + controller.getDigital(ControllerDigital::right) * -12000));
+
 	//down d pad makes it go to resting
 	// a makes it go to horizontal
 	// x makes it go to vert
-	if(controller.getDigital(ControllerDigital::A) && !activatedLadyBrown)
+	if(controller.getDigital(ControllerDigital::A))
 	{
-		activatedLadyBrown = true;
+		if(!activatedLadyBrown)
+		{
+			activatedLadyBrown = true;
+		
 		//ladyBrown.
-
+		//360 ticks
+		// 36 : 1
+		// need 25 degrees or 0.07 * 360
+		// 2.52 : 0.07 
+		//2.52 * 360 = 907.2
+		if(!horizontal)
+		{
+			ladyBrown.moveAbsolute(-907/2 + -907/13 + -907/100,100);
+			horizontal = true;
+		}
+		else
+		{
+			horizontal = false;
+		}
 		//set position to horizontal
-	}
-	else
-	{
+		}
+		else
+		{
 		activatedLadyBrown = false;
-	}
 
-	if(controller.getDigital(ControllerDigital::X) && !activatedVertLB)
-	{
-		activatedVertLB = true;
-
-		//set position to vert
+		}
+		
 	}
-	else
+	if(!horizontal)
 	{
-		activatedVertLB = false;
-	}
-
-	if(controller.getDigital(ControllerDigital::down) && !activatedRestLB)
-	{
-		activatedRestLB = true;
-
-		//set position to vert
-	}
-	else
-	{
-		activatedRestLB = false;
+		ladyBrown.moveVoltage((12000 * controller.getDigital(ControllerDigital::left) + controller.getDigital(ControllerDigital::right) * -12000));
+	
 	}
 
 }

@@ -61,4 +61,4 @@ pros::ADIDigitalOut clamp('H');
 pros::ADIDigitalOut doinker('G');
 okapi::MotorGroup intake ({-10});
 okapi::MotorGroup stage2 ({11});
-okapi::MotorGroup ladyBrown ({1,-2});
+okapi::MotorGroup ladyBrown ({2});
