@@ -9,7 +9,7 @@
 #if defined(LV_LVGL_H_INCLUDE_SIMPLE)
     #include "display/lvgl.h"
 #else
-    #include "display/lvgl.h"
+    #include "liblvgl/lvgl.h"
 #endif
 
 
