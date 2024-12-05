@@ -48,7 +48,7 @@ bool r2;
 #pragma region lemlib
 
 // imu
-pros::Imu imu(9);
+pros::Imu imu(10);
 
 pros::MotorGroup left_motors({-20,-17,18}); 
 pros::MotorGroup right_motors({19,16,-15}); 
@@ -68,9 +68,9 @@ lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel 1, set to null
                             &imu // inertial sensor
 );
  
-lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP) 12
-                                              0.03, // integral gain (kI)
-                                              0.1, // derivative gain (kD) 3
+lemlib::ControllerSettings lateral_controller(8.2, // proportional gain (kP) 12
+                                              0, // integral gain (kI)
+                                              0.01, // derivative gain (kD) 3
                                               0, // anti windup
                                               0, // small error range, in inches
                                               100, // small error range timeout, in milliseconds
@@ -80,9 +80,9 @@ lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP) 12
 );
 
 // angular PID controller
-lemlib::ControllerSettings angular_controller(0.9, // proportional gain (kP)
+lemlib::ControllerSettings angular_controller(10, // proportional gain (kP) 6.4
                                               0, // integral gain (kI)
-                                              0.5, // derivative gain (kD)
+                                              0.5, // derivative gain (kD) 0.21
                                               0, // anti windup
                                               0, // small error range, in inches
                                               100, // small error range timeout, in milliseconds
@@ -209,6 +209,8 @@ r2 = false;
 #pragma endregion
 
 ladyBrown.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+LBRotation.reset_position();
+
 
 llchassis.calibrate();
 }
@@ -221,9 +223,12 @@ void autonomous()
 {
 	odomChassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
 	odomChassis->setMaxVelocity(400);
-	autonNumber = 0;
+	autonNumber = 6;
 	switch (autonNumber)
 	{
+	/////////////////////////////////////////////////////////////////////
+	//BLUE SIDE WP///////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
 	case 0:
 	{
 	llchassis.setPose(-24,0,315);
@@ -232,52 +237,78 @@ void autonomous()
 		//starting at 0, 12+8, 45 deg
 		//move backwards to mogo and grab
 		clamp.set_value(LOW);
-		llchassis.moveToPoint(-3, -27,2000, {.forwards = false,.maxSpeed = 60.0f});
+		llchassis.moveToPoint(-2, -28,2000, {.forwards = false,.maxSpeed = 60.0f});
 		pros::delay(1500);
 		clamp.set_value(HIGH);
-		pros::delay(500);
-		llchassis.turnToHeading(270,1000);
+		pros::delay(250);
+		llchassis.turnToHeading(270,500);
 	intake.moveVoltage((
 		(12000)));
 	stage2.moveVoltage((
 		0.9 * ((12000))));
 
-pros::delay(1000);
-		llchassis.moveToPoint(-24,-24,1000, {.maxSpeed = 60.0f});
+pros::delay(500);
+//grab the 2 stack
+		llchassis.moveToPoint(-24,-24,1500, {.maxSpeed = 60.0f});
 pros::delay(1000);
 
-llchassis.turnToHeading(180,1000);
-pros::delay(1000);
+//turn towards the 2x2x2 stack
+llchassis.turnToHeading(155,600);//148
+pros::delay(600);
+
+llchassis.setPose(0,0,0);
+
 clamp.set_value(LOW);
 pros::delay(500);
-//works till here
-		stage2.moveVoltage(0);
-llchassis.moveToPoint(-24,-36,1000, {.maxSpeed = 60.0f});
-pros::delay(1000);
 
-intake.moveVoltage(0);
+llchassis.moveToPoint(0,15,1500,{.maxSpeed = 60.0f});
+			//get the doughnut from the 2x2x2
+pros::delay(1100);
+stage2.moveVoltage(0);
 
-		//move all the way back
-		llchassis.moveToPoint(-24,-24,1000, {.forwards = false,.maxSpeed = 70.0f});
-		pros::delay(500);
 
-		llchassis.turnToHeading(315,1000);
-pros::delay(500);
-				llchassis.moveToPoint(18,0,4000, {.forwards = false,.maxSpeed = 60.0f});
-				pros::delay(2000);
-		llchassis.turnToHeading(180,1000);
-		pros::delay(500);
-		llchassis.moveToPoint(26,0,1000,{.forwards = false,.maxSpeed = 60.0f});
-		pros::delay(1000);
-		intake.moveVoltage((
-		12000));
-	stage2.moveVoltage((
-		0.9 * ((12000 ))));
-	pros::delay(1000);
-	llchassis.moveToPoint(26,-40,1000,{.maxSpeed = 60.0f});
-	pros::delay(2000);
+			//SWIRL
+			llchassis.moveToPoint(-12,-38,2700,{.maxSpeed = 80.0f});
+pros::delay(2700);
+
+//turn to disrupt
+			llchassis.turnToHeading(45,500);// not fa enough 75
+			pros::delay(500);
+			llchassis.setPose(0,0,0);
+			
+
+			llchassis.moveToPoint(0,-19,1000,{.forwards = false,.maxSpeed = 80.0f});
+
+ 			llchassis.turnToHeading(240,500);
+			
+			pros::delay(500);
+			
+						llchassis.setPose(0,0,0);
+						llchassis.moveToPoint(0,-12,2000,{.forwards = false,.maxSpeed = 80.0f});
+
+
+pros::delay(2000);
+
+			stage2.moveVoltage((((12000 ))));
+			pros::delay(1000);
+			stage2.moveVoltage(0);
+			llchassis.setPose(0,0,0);
+			//toutch pole
+			llchassis.moveToPoint(0,35,1000, {.maxSpeed = 80.0f});
+			 ladyBrown.moveAbsolute(-907*2.5, 100);
+			 pros::delay(2000);
+			 
 		break;
 	}
+
+
+
+
+
+
+	/////////////////////////////////////////////////////////////////////
+	//RED SIDE WP///////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
 	case 1:
 	{
 	llchassis.setPose(-24,0,315);
@@ -305,7 +336,48 @@ pros::delay(1000);
 clamp.set_value(LOW);
 pros::delay(500);
 
+//works till here
+			llchassis.setPose(0,0,-45);
+			llchassis.turnToHeading(0,1500);
+			llchassis.moveToPoint(0,15,1500,{.maxSpeed = 60.0f});
+			//get the doughnut from the 2x2x2
+pros::delay(1300);
 		stage2.moveVoltage(0);
+
+
+
+
+		 //swirl
+			llchassis.moveToPoint(24,-5,3000,{.forwards = false,.maxSpeed = 80.0f});
+			pros::delay(3000);
+						llchassis.moveToPoint(24,-25,3000,{.forwards = false,.maxSpeed = 80.0f});
+
+			//turn to disrupt
+			llchassis.turnToHeading(235,1000);
+
+			llchassis.setPose(0,0,0);
+			llchassis.moveToPoint(0,-28,2000,{.forwards = false,.maxSpeed = 60.0f});
+			
+			llchassis.turnToHeading(90,1000);
+			pros::delay(1000);
+			
+			llchassis.moveToPoint(50,-25,2000,{.forwards = false,.maxSpeed = 40.0f});
+			pros::delay(1200);
+			stage2.moveVoltage((((12000 ))));
+			pros::delay(1000);
+			stage2.moveVoltage(0);
+			llchassis.setPose(0,0,0);
+			//toutch pole
+			llchassis.moveToPoint(0,35,1000, {.maxSpeed = 60.0f});
+			 ladyBrown.moveAbsolute(-907 * 2, 100);
+			 pros::delay(2000);
+			/*
+			
+			llchassis.moveToPoint(25,-40,1000,{.forwards = false,.maxSpeed = 60.0f});
+			
+*/
+
+
 		/*
 llchassis.moveToPoint(18,8,1000, {.maxSpeed = 60.0f});
 pros::delay(1200);
@@ -333,29 +405,136 @@ pros::delay(1000);
 	*/
 		break;
 	}
+	
+	/////////////////////////////////////////////////////////////////////
+	//DISCORD AUTON///////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
 	case 2: 
 	{
-	llchassis.setPose(0,0,0);
+			llchassis.setPose(0,0,0);
+			llchassis.moveToPoint(0,-38,2000,{.forwards = false,.maxSpeed = 60.0f});
+			pros::delay(2000);
+			llchassis.turnToHeading(90,1000);
+			pros::delay(1000);
+			llchassis.moveToPoint(-4,-48,800,{.forwards = false,.maxSpeed = 60.0f});
+			pros::delay(800);
+			clamp.set_value(HIGH);
+			pros::delay(500);
+			stage2.moveVoltage(12000);
+			pros::delay(400);
+			llchassis.turnToHeading(0,1000);
+			pros::delay(1000);
+			clamp.set_value(LOW);
+			pros::delay(200);
+			llchassis.moveToPoint(-4,-36,1000,{.forwards = false,.maxSpeed = 60.0f});
+			pros::delay(1000); //tune this so it doesnt intake the ring all the way
+			stage2.moveVoltage(0);
+			llchassis.turnToHeading(90,1000);
+			pros::delay(1000);
+			llchassis.moveToPoint(-16,-36,1000,{.forwards = false,.maxSpeed = 60.0f});
+			pros::delay(1000);
+			clamp.set_value(HIGH);
+			pros::delay(200);
+			stage2.moveVoltage(12000);
+			pros::delay(1000);
+
+		break;
+	}
+	//blue side temp auton
+	case 3:
+	{
+		llchassis.setPose(-24,0,315);
+
+	 int maxspeed = 60.0f;
+		//starting at 0, 12+8, 45 deg
+		//move backwards to mogo and grab
 		clamp.set_value(LOW);
-		llchassis.moveToPoint(0,-36,2000,{.forwards = false,.maxSpeed = 70.0f});
-		pros::delay(1000);
+		llchassis.moveToPoint(-2, -28,2000, {.forwards = false,.maxSpeed = 60.0f});
+		pros::delay(1500);
 		clamp.set_value(HIGH);
-		pros::delay(500);
-		intake.moveVoltage((
+		pros::delay(250);
+		llchassis.turnToHeading(270,500);
+	intake.moveVoltage((
 		(12000)));
 	stage2.moveVoltage((
 		0.9 * ((12000))));
-		llchassis.turnToHeading(90,1000);
-		pros::delay(750);
-				llchassis.moveToPoint(24,-36,2000,{.maxSpeed = 70.0f});
-				pros::delay(1000);
-				pros::delay(1000);
+
+pros::delay(500);
+//grab the 2 stack
+		llchassis.moveToPoint(-24,-24,1500, {.maxSpeed = 60.0f});
+pros::delay(1000);
+
+//turn towards the 2x2x2 stack
+llchassis.turnToHeading(148,800);
+pros::delay(800);
+
+llchassis.setPose(0,0,0);
+
+
+llchassis.moveToPoint(0,15,1500,{.maxSpeed = 60.0f});
+			//get the doughnut from the 2x2x2
+pros::delay(1100);
+
 		break;
 	}
-	case 3:
-		break;
+	//red side temp auton
 	case 4:
+	{
+		llchassis.setPose(-24,0,315);
+
+		//starting at 0, 12+8, 45 deg
+		//move backwards to mogo and grab
+		clamp.set_value(LOW);
+		llchassis.moveToPoint(-3, -27,2000, {.forwards = false,.maxSpeed = 60.0f});
+		pros::delay(1500);
+		clamp.set_value(HIGH);
+		pros::delay(500);
+		
+		llchassis.turnToHeading(0,1000);
+	intake.moveVoltage((
+		(12000)));
+	stage2.moveVoltage((
+		0.9 * ((12000))));
+
+pros::delay(1000);
+		llchassis.moveToPoint(10,8,1000, {.maxSpeed = 60.0f});
+pros::delay(2000);
+
+llchassis.turnToHeading(90,1000);
+pros::delay(1000);
+
+//works till here
+			llchassis.setPose(0,0,-45);
+			llchassis.turnToHeading(0,1500);
+			llchassis.moveToPoint(0,15,1500,{.maxSpeed = 60.0f});
+			//get the doughnut from the 2x2x2
+pros::delay(1500);
 		break;
+	}
+	case 5:
+	{
+		llchassis.setPose(0,0,0);
+		llchassis.moveToPoint(0,-36,1200,{.forwards = false,.maxSpeed = 60.0f});
+		pros::delay(1200);
+		clamp.set_value(HIGH);
+		pros::delay(200);
+
+		stage2.moveVoltage(12000);
+		llchassis.turnToHeading(270,1000);
+		pros::delay(1000);
+		llchassis.moveToPoint(24,-36,1000,{.maxSpeed = 80.0f});
+		pros::delay(1000);
+
+		break;
+	}
+	//tune PID
+	case 6:
+	{
+		llchassis.setPose(0,0,0);
+		llchassis.turnToHeading(90,2000,{.maxSpeed = 100});
+		pros::delay(2000);
+	break;
+	}
 	default:
 		break;
 	}
@@ -436,6 +615,10 @@ bool activatedRestLB = false;
 bool horizontal = false;
 void updateLadyBrown()  // flat
 {
+	if(activatedLadyBrown)
+	{
+		
+	}
     // down d pad makes it go to resting
     //  a makes it go to horizontal
     //  x makes it go to vert
@@ -446,13 +629,30 @@ void updateLadyBrown()  // flat
         activatedLadyBrown = false;
     }
     if(activatedLadyBrown) {
+		/*
         // ladyBrown.
         // 360 ticks
         //  36 : 1
         //  need 25 degrees or 0.07 * 360
         //  2.52 : 0.07
         // 2.52 * 360 = 907.2
-        ladyBrown.moveAbsolute(-907 / 2 + -907 / 13 + -907 / 100, 100);
+        //ladyBrown.moveAbsolute(-907 / 2 + -907 / 13 + -907 / 100, 100);
+
+*/
+		//345.5
+		float target = 349;
+		int voltageToMove = 0;
+		int voltageToMoveNeg = -5000;
+		float angle = (float)LBRotation.get_angle() / 100;
+		
+		if (angle > target || angle < 10)
+		{
+			ladyBrown.moveVoltage(voltageToMoveNeg);
+		}
+		else if(angle < target)
+		{
+			ladyBrown.moveVoltage(voltageToMove);
+		}
     } else {
         ladyBrown.moveVoltage((12000 * controller.getDigital(ControllerDigital::left) + controller.getDigital(ControllerDigital::right) * -12000));
     }
