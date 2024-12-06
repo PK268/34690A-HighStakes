@@ -68,9 +68,9 @@ lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel 1, set to null
                             &imu // inertial sensor
 );
  
-lemlib::ControllerSettings lateral_controller(8.2, // proportional gain (kP) 12
+lemlib::ControllerSettings lateral_controller(12, // proportional gain (kP) 12
                                               0, // integral gain (kI)
-                                              0.01, // derivative gain (kD) 3
+                                              2.5, // derivative gain (kD) 3
                                               0, // anti windup
                                               0, // small error range, in inches
                                               100, // small error range timeout, in milliseconds
@@ -78,11 +78,14 @@ lemlib::ControllerSettings lateral_controller(8.2, // proportional gain (kP) 12
                                               500, // large error range timeout, in milliseconds
                                               0 // maximum acceleration (slew)
 );
-
+//6.66 - 7.52 = 0.86
+//ki = 2 * (60 / 0.86);
+//kd = 0.125  * 60 * 	0.86
 // angular PID controller
-lemlib::ControllerSettings angular_controller(10, // proportional gain (kP) 6.4
+//100
+lemlib::ControllerSettings angular_controller(1.25, // proportional gain (kP) 9
                                               0, // integral gain (kI)
-                                              0.5, // derivative gain (kD) 0.21
+                                              4, // derivative gain (kD)
                                               0, // anti windup
                                               0, // small error range, in inches
                                               100, // small error range timeout, in milliseconds
@@ -223,7 +226,7 @@ void autonomous()
 {
 	odomChassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
 	odomChassis->setMaxVelocity(400);
-	autonNumber = 6;
+	autonNumber = 1;
 	switch (autonNumber)
 	{
 	/////////////////////////////////////////////////////////////////////
@@ -311,6 +314,55 @@ pros::delay(2000);
 	////////////////////////////////////////////////////////////////////
 	case 1:
 	{
+		llchassis.setPose(0,0,180);
+
+		//move to get first mogo
+		llchassis.moveToPoint(0,36,2000,{.forwards = false,.maxSpeed = 80.0f});
+		pros::delay(1200);
+
+		//get mogo
+				clamp.set_value(HIGH);
+				pros::delay(1000);
+
+				llchassis.turnToHeading(270,1000,{.maxSpeed = 100});
+				pros::delay(1000);
+
+				
+	stage2.moveVoltage((
+		0.9 * ((12000))));
+				llchassis.moveToPoint(-24,36,2000,{.maxSpeed = 100.0f});
+				pros::delay(2000);
+
+				llchassis.turnToHeading(0,2000,{.maxSpeed = 100});
+				pros::delay(2000);
+
+				llchassis.moveToPoint(-24,46,2000,{.maxSpeed = 100.0f});
+				pros::delay(2000);
+
+				pros::delay(1000);
+
+				clamp.set_value(LOW);
+
+				llchassis.moveToPoint(0,0,2000,{.forwards = false,.maxSpeed = 100.0f});
+				pros::delay(2000);
+
+				llchassis.moveToPoint(20,6,2000,{.forwards = false,.maxSpeed = 100.0f});
+				pros::delay(2000);
+
+				llchassis.turnToHeading(0,2000,{.maxSpeed = 100});
+				pros::delay(2000);
+
+						llchassis.setPose(0,0,180);
+
+				llchassis.moveToPoint(0,10,2000,{.forwards = false,.maxSpeed = 100.0f});
+				pros::delay(2000);
+
+				llchassis.moveToPoint(0,-24,2000,{.forwards = false,.maxSpeed = 100.0f});
+				pros::delay(2000);
+
+
+
+		/*
 	llchassis.setPose(-24,0,315);
 
 		//starting at 0, 12+8, 45 deg
@@ -403,6 +455,7 @@ pros::delay(1000);
 	pros::delay(10000);
 	llchassis.moveToPoint(26,-40,1000,{.maxSpeed = 60.0f});
 	*/
+
 		break;
 	}
 	
@@ -531,8 +584,10 @@ pros::delay(1500);
 	case 6:
 	{
 		llchassis.setPose(0,0,0);
-		llchassis.turnToHeading(90,2000,{.maxSpeed = 100});
-		pros::delay(2000);
+
+		llchassis.moveToPoint(0,36, 4000,{.maxSpeed = 100});
+		//llchassis.turnToHeading(90,4000,{.maxSpeed = 100});
+		pros::delay(4000);
 	break;
 	}
 	default:
@@ -613,12 +668,9 @@ bool activatedLadyBrown = false;
 bool activatedVertLB = false;
 bool activatedRestLB = false;
 bool horizontal = false;
+bool setZero = false;
 void updateLadyBrown()  // flat
 {
-	if(activatedLadyBrown)
-	{
-		
-	}
     // down d pad makes it go to resting
     //  a makes it go to horizontal
     //  x makes it go to vert
@@ -628,6 +680,8 @@ void updateLadyBrown()  // flat
     if(controller.getDigital(ControllerDigital::left) || controller.getDigital(ControllerDigital::right)) {
         activatedLadyBrown = false;
     }
+			float angle = (float)LBRotation.get_angle() / 100;
+					float max = 230;
     if(activatedLadyBrown) {
 		/*
         // ladyBrown.
@@ -640,10 +694,11 @@ void updateLadyBrown()  // flat
 
 */
 		//345.5
+
 		float target = 349;
 		int voltageToMove = 0;
 		int voltageToMoveNeg = -5000;
-		float angle = (float)LBRotation.get_angle() / 100;
+
 		
 		if (angle > target || angle < 10)
 		{
@@ -653,9 +708,26 @@ void updateLadyBrown()  // flat
 		{
 			ladyBrown.moveVoltage(voltageToMove);
 		}
-    } else {
+    } else if ( angle > max || angle < 10 || controller.getDigital(ControllerDigital::left)){
+		setZero = false;
         ladyBrown.moveVoltage((12000 * controller.getDigital(ControllerDigital::left) + controller.getDigital(ControllerDigital::right) * -12000));
     }
+	else
+	{
+		if(angle < max)
+		{
+			ladyBrown.moveVoltage(8000);
+		}
+		else
+		{
+			if(!setZero)
+			{
+			ladyBrown.moveVoltage(0);
+				setZero = true;
+			}
+		}
+	}
+
 }
 void opcontrol() {
 	odomChassis->setMaxVelocity(600);
