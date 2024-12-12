@@ -12,7 +12,7 @@
  * You should add more #includes here
  */
 
-#include "okapi/api.hpp"
+#include "okapi\api.hpp"
 //#include "pros/api_legacy.h"
 //#include "pros/apix.h"
 
@@ -63,3 +63,4 @@ okapi::MotorGroup intake ({-10});
 okapi::MotorGroup stage2 ({11});
 pros::Rotation LBRotation ({9});
 okapi::MotorGroup ladyBrown ({2});
+okapi::OpticalSensor opticalSensor(5);

@@ -1,12 +1,11 @@
 #include "main.h"
-#include "vkrlogo_resize.c" 
-#include "liblvgl/lvgl.h" 
-#include "lemlib/api.hpp" 
+#include "vkrlogo_resize.c"
+#include "liblvgl\lvgl.h"
+#include "lemlib\api.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 int autonNumber = -1;
 
@@ -24,8 +23,6 @@ lv_style_t list;
 lv_style_t rollerSelected;
 
 lv_style_t bg;
-
-
 
 static lv_res_t btn_click_action(lv_obj_t *btn)
 {
@@ -50,58 +47,65 @@ bool r2;
 // imu
 pros::Imu imu(10);
 
-pros::MotorGroup left_motors({-20,-17,18}); 
-pros::MotorGroup right_motors({19,16,-15}); 
+pros::MotorGroup left_motors({-20, -17, 18});
+pros::MotorGroup right_motors({19, 16, -15});
 
-lemlib::Drivetrain drivetrain(&left_motors, // left motor group
-                              &right_motors, // right motor group
-                              11.875, // 11.875 inch track width
-                              lemlib::Omniwheel::NEW_275, // using new 2.75" omnis
-                              450, // drivetrain rpm is 450
-                              2 // horizontal drift is 2 (for now)
+lemlib::Drivetrain drivetrain(&left_motors,				  // left motor group
+							  &right_motors,			  // right motor group
+							  11.875,					  // 11.875 inch track width
+							  lemlib::Omniwheel::NEW_275, // using new 2.75" omnis
+							  450,						  // drivetrain rpm is 450
+							  2							  // horizontal drift is 2 (for now)
 );
 
 lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel 1, set to null
-                            nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
-                            nullptr, // horizontal tracking wheel 1
-                            nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
-                            &imu // inertial sensor
+							nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
+							nullptr, // horizontal tracking wheel 1
+							nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
+							&imu	 // inertial sensor
 );
- 
-lemlib::ControllerSettings lateral_controller(12, // proportional gain (kP) 12
-                                              0, // integral gain (kI)
-                                              2.5, // derivative gain (kD) 3
-                                              0, // anti windup
-                                              0, // small error range, in inches
-                                              100, // small error range timeout, in milliseconds
-                                              0, // large error range, in inches
-                                              500, // large error range timeout, in milliseconds
-                                              0 // maximum acceleration (slew)
+
+lemlib::ControllerSettings lateral_controller(12,  // proportional gain (kP) 12
+											  0,   // integral gain (kI)
+											  2.5, // derivative gain (kD) 3
+											  0,   // anti windup
+											  0,   // small error range, in inches
+											  100, // small error range timeout, in milliseconds
+											  0,   // large error range, in inches
+											  500, // large error range timeout, in milliseconds
+											  0	   // maximum acceleration (slew)
 );
-//6.66 - 7.52 = 0.86
-//ki = 2 * (60 / 0.86);
-//kd = 0.125  * 60 * 	0.86
-// angular PID controller
-//100
+// 6.66 - 7.52 = 0.86
+// ki = 2 * (60 / 0.86);
+// kd = 0.125  * 60 * 	0.86
+//  angular PID controller
+// 100
 lemlib::ControllerSettings angular_controller(1.25, // proportional gain (kP) 9
-                                              0, // integral gain (kI)
-                                              4, // derivative gain (kD)
-                                              0, // anti windup
-                                              0, // small error range, in inches
-                                              100, // small error range timeout, in milliseconds
-                                              0, // large error range, in inches
-                                              500, // large error range timeout, in milliseconds
-                                              0 // maximum acceleration (slew)
+											  0,	// integral gain (kI)
+											  4,	// derivative gain (kD)
+											  0,	// anti windup
+											  0,	// small error range, in inches
+											  100,	// small error range timeout, in milliseconds
+											  0,	// large error range, in inches
+											  500,	// large error range timeout, in milliseconds
+											  0		// maximum acceleration (slew)
 );
 
 // create the chassis
-lemlib::Chassis llchassis(drivetrain, // drivetrain settings
-                        lateral_controller, // lateral PID settings
-                        angular_controller, // angular PID settings
-                        sensors // odometry sensors
+lemlib::Chassis llchassis(drivetrain,		  // drivetrain settings
+						  lateral_controller, // lateral PID settings
+						  angular_controller, // angular PID settings
+						  sensors			  // odometry sensors
 );
 
 #pragma endregion
+
+uint32_t ejectBlueTime = 0;
+uint32_t waitReactivateTime = 0;
+bool blue = false;
+bool ejectBlue = true;
+int colorFloor = 0;
+int colorCeiling = 0;
 
 void initialize()
 {
@@ -186,54 +190,122 @@ void initialize()
 	lv_label_set_text(myButtonLabel, "SELECT");		 // sets label text
 #pragma endregion
 
-
 #pragma endregion
-
 
 #pragma region lemlib
 
 #pragma endregion
 #pragma region OKAPI
-	double gearRatio = 36.0/48.0;
+	double gearRatio = 36.0 / 48.0;
 
 	odomChassis = ChassisControllerBuilder()
-				  .withMotors(
-					  {-20,-17,18}, // left Motors
-					  {19,16,-15} // right Motors
-					  )
-				  .withDimensions({okapi::AbstractMotor::gearset::blue, gearRatio}, {{2.75_in, 11.875_in}, 450})
-				  .withOdometry()
-				  .buildOdometry();
-			  
-l1 = false;
-r1 = false;
-r2 = false;
+					  .withMotors(
+						  {-20, -17, 18}, // left Motors
+						  {19, 16, -15}	  // right Motors
+						  )
+					  .withDimensions({okapi::AbstractMotor::gearset::blue, gearRatio}, {{2.75_in, 11.875_in}, 450})
+					  .withOdometry()
+					  .buildOdometry();
+
+	l1 = false;
+	r1 = false;
+	r2 = false;
 
 #pragma endregion
 
-ladyBrown.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
-LBRotation.reset_position();
+	ladyBrown.setBrakeMode(okapi::AbstractMotor::brakeMode::hold);
+	LBRotation.reset_position();
 
+	llchassis.calibrate();
 
-llchassis.calibrate();
+	opticalSensor.setLedPWM(100);
+
+	if (ejectBlue)
+	{
+		colorFloor = 140;
+		colorCeiling = 220;
+	}
+	else
+	{
+		colorFloor = 0;
+		colorCeiling = 27;
+	}
 }
 
 void disabled() {}
 
 void competition_initialize() {}
 
-void autonomous() 
+void autonomous()
 {
 	odomChassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
 	odomChassis->setMaxVelocity(400);
-	autonNumber = 1;
+	autonNumber = 0;
 	switch (autonNumber)
 	{
 	/////////////////////////////////////////////////////////////////////
-	//BLUE SIDE WP///////////////////////////////////////////////////////
+	// BLUE SIDE WP///////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	case 0:
 	{
+
+		llchassis.setPose(0, 0, 180);
+
+		// move to get first mogo
+		llchassis.moveToPoint(0, 36, 1200, {.forwards = false, .maxSpeed = 70.0f});
+		pros::delay(1200);
+
+		// get mogo
+		clamp.set_value(HIGH);
+		pros::delay(700);
+
+		llchassis.turnToHeading(90, 700, {.maxSpeed = 100});
+		pros::delay(700);
+
+		stage2.moveVoltage((
+			0.9 * ((12000))));
+		// Get first two stack
+		llchassis.moveToPoint(20, 36, 2000, {.maxSpeed = 100.0f});
+		pros::delay(2000);
+
+		// turn to 4 stack
+		llchassis.turnToHeading(0, 800, {.maxSpeed = 100});
+		pros::delay(800);
+
+		// get 4 stack
+		clamp.set_value(LOW);
+		llchassis.moveToPoint(20, 46, 850, {.maxSpeed = 100.0f});
+		pros::delay(850);
+		stage2.moveVoltage(0);
+
+		// return to origin
+		llchassis.moveToPoint(0, 14, 2000, {.forwards = false, .maxSpeed = 100.0f});
+		pros::delay(2000);
+
+		// move the allicance stake blockage
+		llchassis.moveToPoint(-27, 14, 2000, {.forwards = false, .maxSpeed = 100.0f});
+		pros::delay(2000);
+
+		// allign to score alliance stake
+		llchassis.turnToHeading(0, 1000, {.maxSpeed = 80});
+		pros::delay(1000);
+
+		llchassis.setPose(0, 0, 180);
+
+		// score alliance stake
+		llchassis.moveToPoint(1, 10, 1000, {.forwards = false, .maxSpeed = 100.0f});
+		pros::delay(1000);
+
+		stage2.moveVoltage((
+			0.9 * ((12000))));
+		pros::delay(1000);
+		stage2.moveVoltage(0);
+		// touch bar
+		llchassis.moveToPoint(0, -24, 800, {.maxSpeed = 80.0f});
+		pros::delay(800);
+		doinker.set_value(HIGH);
+
+		/*
 	llchassis.setPose(-24,0,315);
 
 	 int maxspeed = 60.0f;
@@ -278,14 +350,14 @@ pros::delay(2700);
 			llchassis.turnToHeading(45,500);// not fa enough 75
 			pros::delay(500);
 			llchassis.setPose(0,0,0);
-			
+
 
 			llchassis.moveToPoint(0,-19,1000,{.forwards = false,.maxSpeed = 80.0f});
 
- 			llchassis.turnToHeading(240,500);
-			
+			llchassis.turnToHeading(240,500);
+
 			pros::delay(500);
-			
+
 						llchassis.setPose(0,0,0);
 						llchassis.moveToPoint(0,-12,2000,{.forwards = false,.maxSpeed = 80.0f});
 
@@ -300,67 +372,69 @@ pros::delay(2000);
 			llchassis.moveToPoint(0,35,1000, {.maxSpeed = 80.0f});
 			 ladyBrown.moveAbsolute(-907*2.5, 100);
 			 pros::delay(2000);
-			 
+			 */
 		break;
 	}
 
-
-
-
-
-
 	/////////////////////////////////////////////////////////////////////
-	//RED SIDE WP///////////////////////////////////////////////////////
+	// RED SIDE WP///////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	case 1:
 	{
-		llchassis.setPose(0,0,180);
+		llchassis.setPose(0, 0, 180);
 
-		//move to get first mogo
-		llchassis.moveToPoint(0,36,2000,{.forwards = false,.maxSpeed = 80.0f});
+		// move to get first mogo
+		llchassis.moveToPoint(0, 36, 1200, {.forwards = false, .maxSpeed = 70.0f});
 		pros::delay(1200);
 
-		//get mogo
-				clamp.set_value(HIGH);
-				pros::delay(1000);
+		// get mogo
+		clamp.set_value(HIGH);
+		pros::delay(700);
 
-				llchassis.turnToHeading(270,1000,{.maxSpeed = 100});
-				pros::delay(1000);
+		llchassis.turnToHeading(270, 700, {.maxSpeed = 100});
+		pros::delay(700);
 
-				
-	stage2.moveVoltage((
-		0.9 * ((12000))));
-				llchassis.moveToPoint(-24,36,2000,{.maxSpeed = 100.0f});
-				pros::delay(2000);
+		stage2.moveVoltage((
+			0.9 * ((12000))));
+		// Get first two stack
+		llchassis.moveToPoint(-20, 36, 2000, {.maxSpeed = 100.0f});
+		pros::delay(2000);
 
-				llchassis.turnToHeading(0,2000,{.maxSpeed = 100});
-				pros::delay(2000);
+		// turn to 4 stack
+		llchassis.turnToHeading(0, 800, {.maxSpeed = 100});
+		pros::delay(800);
 
-				llchassis.moveToPoint(-24,46,2000,{.maxSpeed = 100.0f});
-				pros::delay(2000);
+		// get 4 stack
+		clamp.set_value(LOW);
+		llchassis.moveToPoint(-20, 46, 850, {.maxSpeed = 100.0f});
+		pros::delay(850);
+		stage2.moveVoltage(0);
 
-				pros::delay(1000);
+		// return to origin
+		llchassis.moveToPoint(0, 0, 2000, {.forwards = false, .maxSpeed = 100.0f});
+		pros::delay(2000);
 
-				clamp.set_value(LOW);
+		// move the allicance stake blockage
+		llchassis.moveToPoint(22, 6, 2000, {.forwards = false, .maxSpeed = 100.0f});
+		pros::delay(2000);
 
-				llchassis.moveToPoint(0,0,2000,{.forwards = false,.maxSpeed = 100.0f});
-				pros::delay(2000);
+		// allign to score alliance stake
+		llchassis.turnToHeading(0, 1000, {.maxSpeed = 80});
+		pros::delay(1000);
 
-				llchassis.moveToPoint(20,6,2000,{.forwards = false,.maxSpeed = 100.0f});
-				pros::delay(2000);
+		llchassis.setPose(0, 0, 180);
 
-				llchassis.turnToHeading(0,2000,{.maxSpeed = 100});
-				pros::delay(2000);
+		// score alliance stake
+		llchassis.moveToPoint(0, 10, 1000, {.forwards = false, .maxSpeed = 100.0f});
+		pros::delay(1000);
 
-						llchassis.setPose(0,0,180);
-
-				llchassis.moveToPoint(0,10,2000,{.forwards = false,.maxSpeed = 100.0f});
-				pros::delay(2000);
-
-				llchassis.moveToPoint(0,-24,2000,{.forwards = false,.maxSpeed = 100.0f});
-				pros::delay(2000);
-
-
+		stage2.moveVoltage((
+			0.9 * ((12000))));
+		pros::delay(1000);
+		stage2.moveVoltage(0);
+		// touch bar
+		// llchassis.moveToPoint(0,-24,2000,{.maxSpeed = 100.0f});
+		// pros::delay(2000);
 
 		/*
 	llchassis.setPose(-24,0,315);
@@ -372,7 +446,7 @@ pros::delay(2000);
 		pros::delay(1500);
 		clamp.set_value(HIGH);
 		pros::delay(500);
-		
+
 		llchassis.turnToHeading(0,1000);
 	intake.moveVoltage((
 		(12000)));
@@ -409,10 +483,10 @@ pros::delay(1300);
 
 			llchassis.setPose(0,0,0);
 			llchassis.moveToPoint(0,-28,2000,{.forwards = false,.maxSpeed = 60.0f});
-			
+
 			llchassis.turnToHeading(90,1000);
 			pros::delay(1000);
-			
+
 			llchassis.moveToPoint(50,-25,2000,{.forwards = false,.maxSpeed = 40.0f});
 			pros::delay(1200);
 			stage2.moveVoltage((((12000 ))));
@@ -424,11 +498,10 @@ pros::delay(1300);
 			 ladyBrown.moveAbsolute(-907 * 2, 100);
 			 pros::delay(2000);
 			/*
-			
-			llchassis.moveToPoint(25,-40,1000,{.forwards = false,.maxSpeed = 60.0f});
-			
-*/
 
+			llchassis.moveToPoint(25,-40,1000,{.forwards = false,.maxSpeed = 60.0f});
+
+*/
 
 		/*
 llchassis.moveToPoint(18,8,1000, {.maxSpeed = 60.0f});
@@ -458,12 +531,49 @@ pros::delay(1000);
 
 		break;
 	}
-	
+
 	/////////////////////////////////////////////////////////////////////
-	//DISCORD AUTON///////////////////////////////////////////////////////
+	// NEG RED AUTON (Prev discord)///////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	case 2: 
+	case 2:
 	{
+		llchassis.setPose(0, 0, 0);
+
+		// goal rush
+		llchassis.moveToPoint(0, 42, 2000, {.maxSpeed = 100.0f});
+		pros::delay(2000);
+
+		// turn to allign doinker with goal
+		llchassis.turnToHeading(-75, 1000, {.maxSpeed = 100});
+		pros::delay(1000);
+
+		// get goal
+		doinker.set_value(HIGH);
+		pros::delay(1000);
+
+		// turn back on axis
+		llchassis.turnToHeading(15, 1000, {.maxSpeed = 100});
+		pros::delay(1000);
+
+		llchassis.setPose(0, 42, 0);
+
+		// go back to origin with the goal
+		llchassis.moveToPoint(-12, 0, 2000, {.forwards = false, .maxSpeed = 100.0f});
+		pros::delay(2000);
+
+		doinker.set_value(LOW);
+		pros::delay(1000);
+
+		llchassis.setPose(0, 0, 45);
+
+		llchassis.turnToHeading(165, 1000, {.maxSpeed = 100});
+		pros::delay(1000);
+
+		llchassis.setPose(0, 0, 135);
+		llchassis.moveToPoint(-24, 24, 2000, {.forwards = false, .maxSpeed = 100.0f});
+		pros::delay(2000);
+
+		/*
 			llchassis.setPose(0,0,0);
 			llchassis.moveToPoint(0,-38,2000,{.forwards = false,.maxSpeed = 60.0f});
 			pros::delay(2000);
@@ -490,105 +600,92 @@ pros::delay(1000);
 			pros::delay(200);
 			stage2.moveVoltage(12000);
 			pros::delay(1000);
-
+*/
 		break;
 	}
-	//blue side temp auton
+	// blue side temp auton
 	case 3:
 	{
-		llchassis.setPose(-24,0,315);
+		llchassis.setPose(-24, 0, 315);
 
-	 int maxspeed = 60.0f;
-		//starting at 0, 12+8, 45 deg
-		//move backwards to mogo and grab
+		int maxspeed = 60.0f;
+		// starting at 0, 12+8, 45 deg
+		// move backwards to mogo and grab
 		clamp.set_value(LOW);
-		llchassis.moveToPoint(-2, -28,2000, {.forwards = false,.maxSpeed = 60.0f});
+		llchassis.moveToPoint(-2, -28, 2000, {.forwards = false, .maxSpeed = 60.0f});
 		pros::delay(1500);
 		clamp.set_value(HIGH);
 		pros::delay(250);
-		llchassis.turnToHeading(270,500);
-	intake.moveVoltage((
-		(12000)));
-	stage2.moveVoltage((
-		0.9 * ((12000))));
+		llchassis.turnToHeading(270, 500);
+		intake.moveVoltage((
+			(12000)));
+		stage2.moveVoltage((
+			0.9 * ((12000))));
 
-pros::delay(500);
-//grab the 2 stack
-		llchassis.moveToPoint(-24,-24,1500, {.maxSpeed = 60.0f});
-pros::delay(1000);
+		pros::delay(500);
+		// grab the 2 stack
+		llchassis.moveToPoint(-24, -24, 1500, {.maxSpeed = 60.0f});
+		pros::delay(1000);
 
-//turn towards the 2x2x2 stack
-llchassis.turnToHeading(148,800);
-pros::delay(800);
+		// turn towards the 2x2x2 stack
+		llchassis.turnToHeading(148, 800);
+		pros::delay(800);
 
-llchassis.setPose(0,0,0);
+		llchassis.setPose(0, 0, 0);
 
-
-llchassis.moveToPoint(0,15,1500,{.maxSpeed = 60.0f});
-			//get the doughnut from the 2x2x2
-pros::delay(1100);
+		llchassis.moveToPoint(0, 15, 1500, {.maxSpeed = 60.0f});
+		// get the doughnut from the 2x2x2
+		pros::delay(1100);
 
 		break;
 	}
-	//red side temp auton
+	// red side temp auton
 	case 4:
 	{
-		llchassis.setPose(-24,0,315);
+		llchassis.setPose(0, 0, 0);
 
-		//starting at 0, 12+8, 45 deg
-		//move backwards to mogo and grab
-		clamp.set_value(LOW);
-		llchassis.moveToPoint(-3, -27,2000, {.forwards = false,.maxSpeed = 60.0f});
-		pros::delay(1500);
+		// starting at 0, 12+8, 45 deg
+		// move backwards to mogo and grab
+		llchassis.moveToPoint(0, -42, 2000, {.forwards = false, .maxSpeed = 70.0f});
+		pros::delay(2000);
 		clamp.set_value(HIGH);
 		pros::delay(500);
-		
-		llchassis.turnToHeading(0,1000);
-	intake.moveVoltage((
-		(12000)));
-	stage2.moveVoltage((
-		0.9 * ((12000))));
 
-pros::delay(1000);
-		llchassis.moveToPoint(10,8,1000, {.maxSpeed = 60.0f});
-pros::delay(2000);
+		stage2.moveVoltage((
+			0.9 * ((12000))));
+		pros::delay(2000);
 
-llchassis.turnToHeading(90,1000);
-pros::delay(1000);
-
-//works till here
-			llchassis.setPose(0,0,-45);
-			llchassis.turnToHeading(0,1500);
-			llchassis.moveToPoint(0,15,1500,{.maxSpeed = 60.0f});
-			//get the doughnut from the 2x2x2
-pros::delay(1500);
+		llchassis.turnToHeading(180, 1500);
+		pros::delay(1500);
+		llchassis.moveToPoint(0, -66, 2000, {.maxSpeed = 70.0f});
+		pros::delay(2000);
 		break;
 	}
 	case 5:
 	{
-		llchassis.setPose(0,0,0);
-		llchassis.moveToPoint(0,-36,1200,{.forwards = false,.maxSpeed = 60.0f});
+		llchassis.setPose(0, 0, 0);
+		llchassis.moveToPoint(0, -36, 1200, {.forwards = false, .maxSpeed = 60.0f});
 		pros::delay(1200);
 		clamp.set_value(HIGH);
 		pros::delay(200);
 
 		stage2.moveVoltage(12000);
-		llchassis.turnToHeading(270,1000);
+		llchassis.turnToHeading(270, 1000);
 		pros::delay(1000);
-		llchassis.moveToPoint(24,-36,1000,{.maxSpeed = 80.0f});
+		llchassis.moveToPoint(24, -36, 1000, {.maxSpeed = 80.0f});
 		pros::delay(1000);
 
 		break;
 	}
-	//tune PID
+	// tune PID
 	case 6:
 	{
-		llchassis.setPose(0,0,0);
+		llchassis.setPose(0, 0, 0);
 
-		llchassis.moveToPoint(0,36, 4000,{.maxSpeed = 100});
-		//llchassis.turnToHeading(90,4000,{.maxSpeed = 100});
+		llchassis.moveToPoint(0, 36, 4000, {.maxSpeed = 100});
+		// llchassis.turnToHeading(90,4000,{.maxSpeed = 100});
 		pros::delay(4000);
-	break;
+		break;
 	}
 	default:
 		break;
@@ -599,21 +696,19 @@ inline void updateDrive()
 {
 	float leftC = controller.getAnalog(ControllerAnalog::leftY);
 	float rightC = controller.getAnalog(ControllerAnalog::rightY);
-	//chassis.tank(leftC, rightC);
-	
+	// chassis.tank(leftC, rightC);
+
 	odomChassis->getModel()->tank(
 		leftC,
-		rightC
-	);
-	
+		rightC);
 }
 bool activated = false;
 inline void updateClamp()
 {
-	bool newL1 = controller.getDigital(ControllerDigital::L1); //clamp
-	if(newL1 == true)
+	bool newL1 = controller.getDigital(ControllerDigital::L1); // clamp
+	if (newL1 == true)
 	{
-		if(activated == false)
+		if (activated == false)
 		{
 			l1 = !l1;
 			clamp.set_value(l1);
@@ -629,10 +724,10 @@ bool l2 = false;
 bool activatedDoinker = false;
 inline void updateDoinker()
 {
-	bool newL2 = controller.getDigital(ControllerDigital::L2); //clamp
-	if(newL2 == true)
+	bool newL2 = controller.getDigital(ControllerDigital::L2); // clamp
+	if (newL2 == true)
 	{
-		if(activatedDoinker == false)
+		if (activatedDoinker == false)
 		{
 			l2 = !l2;
 			doinker.set_value(l2);
@@ -646,12 +741,12 @@ inline void updateDoinker()
 }
 inline void updateIntake()
 {
-	bool newR1 = controller.getDigital(ControllerDigital::R1); //intake
-	bool newR2 = controller.getDigital(ControllerDigital::R2); //outtake
-	
+	bool newR1 = controller.getDigital(ControllerDigital::R1); // intake
+	bool newR2 = controller.getDigital(ControllerDigital::R2); // outtake
+
 	intake.moveVoltage((
 		(12000 * newR1) + (-12000 * newR2)));
-		
+
 	stage2.moveVoltage((
 		1 * ((12000 * newR1) + (-12000 * newR2))));
 	r1 = newR1;
@@ -659,7 +754,7 @@ inline void updateIntake()
 }
 inline void updateForceOpen()
 {
-	if(controller.getDigital(ControllerDigital::Y))
+	if (controller.getDigital(ControllerDigital::Y))
 	{
 		clamp.set_value(LOW);
 	}
@@ -669,68 +764,137 @@ bool activatedVertLB = false;
 bool activatedRestLB = false;
 bool horizontal = false;
 bool setZero = false;
-void updateLadyBrown()  // flat
+void updateLadyBrown() // flat
 {
-    // down d pad makes it go to resting
-    //  a makes it go to horizontal
-    //  x makes it go to vert
-    if(controller.getDigital(ControllerDigital::A)) {
-        activatedLadyBrown = true;
-    }
-    if(controller.getDigital(ControllerDigital::left) || controller.getDigital(ControllerDigital::right)) {
-        activatedLadyBrown = false;
-    }
-			float angle = (float)LBRotation.get_angle() / 100;
-					float max = 230;
-    if(activatedLadyBrown) {
+	// down d pad makes it go to resting
+	//  a makes it go to horizontal
+	//  x makes it go to vert
+	if (controller.getDigital(ControllerDigital::A))
+	{
+		activatedLadyBrown = true;
+	}
+	if (controller.getDigital(ControllerDigital::left) || controller.getDigital(ControllerDigital::right))
+	{
+		activatedLadyBrown = false;
+	}
+	float angle = (float)LBRotation.get_angle() / 100;
+	float max = 230;
+	if (activatedLadyBrown)
+	{
 		/*
-        // ladyBrown.
-        // 360 ticks
-        //  36 : 1
-        //  need 25 degrees or 0.07 * 360
-        //  2.52 : 0.07
-        // 2.52 * 360 = 907.2
-        //ladyBrown.moveAbsolute(-907 / 2 + -907 / 13 + -907 / 100, 100);
+		// ladyBrown.
+		// 360 ticks
+		//  36 : 1
+		//  need 25 degrees or 0.07 * 360
+		//  2.52 : 0.07
+		// 2.52 * 360 = 907.2
+		//ladyBrown.moveAbsolute(-907 / 2 + -907 / 13 + -907 / 100, 100);
 
 */
-		//345.5
+		// 345.5
 
-		float target = 349;
-		int voltageToMove = 0;
-		int voltageToMoveNeg = -5000;
+		float target = 350;
+		int voltageToMove = -500;
+		int voltageToMoveNeg = -3000;
 
-		
 		if (angle > target || angle < 10)
 		{
 			ladyBrown.moveVoltage(voltageToMoveNeg);
 		}
-		else if(angle < target)
+		else if (angle < target)
 		{
 			ladyBrown.moveVoltage(voltageToMove);
 		}
-    } else if ( angle > max || angle < 10 || controller.getDigital(ControllerDigital::left)){
+	}
+	else if (angle > max || angle < 10 || controller.getDigital(ControllerDigital::left))
+	{
 		setZero = false;
-        ladyBrown.moveVoltage((12000 * controller.getDigital(ControllerDigital::left) + controller.getDigital(ControllerDigital::right) * -12000));
-    }
+		ladyBrown.moveVoltage((12000 * controller.getDigital(ControllerDigital::left) + controller.getDigital(ControllerDigital::right) * -12000));
+	}
 	else
 	{
-		if(angle < max)
+		if (angle < max)
 		{
 			ladyBrown.moveVoltage(8000);
 		}
 		else
 		{
-			if(!setZero)
+			if (!setZero)
 			{
-			ladyBrown.moveVoltage(0);
+				ladyBrown.moveVoltage(0);
 				setZero = true;
 			}
 		}
 	}
-
 }
-void opcontrol() {
+bool colorSortOn = true;
+bool colorSortToggle = false;
+bool colorSortSwitchToggle = false;
+void UpdateColorSort()
+{
+	if (controller.getDigital(ControllerDigital::up))
+	{
+		if (!colorSortToggle)
+		{
+			colorSortOn = !colorSortOn;
+			colorSortToggle = true;
+		}
+	}
+	else
+	{
+		colorSortToggle = false;
+	}
+
+	if (colorSortOn)
+	{
+		if (!colorSortSwitchToggle && controller.getDigital(ControllerDigital::down))
+		{
+			ejectBlue = !ejectBlue;
+			colorSortSwitchToggle = true;
+
+			if (ejectBlue)
+			{
+				colorFloor = 140;
+				colorCeiling = 220;
+			}
+			else
+			{
+				colorFloor = 0;
+				colorCeiling = 35;
+			}
+		}
+		else
+		{
+			colorSortSwitchToggle = false;
+		}
+
+		float hue = opticalSensor.getHue();
+		float millis = pros::millis();
+
+		if (millis < waitReactivateTime)
+		{
+			stage2.moveVoltage((0));
+		}
+		else
+		{
+			if (hue > colorFloor && hue < colorCeiling && !blue)
+			{
+				blue = true;
+				ejectBlueTime = millis;
+			}
+			if (blue && millis >= ejectBlueTime + 150)
+			{
+				stage2.moveVoltage((0));
+				blue = false;
+				waitReactivateTime = millis + 235;
+			}
+		}
+	}
+}
+void opcontrol()
+{
 	odomChassis->setMaxVelocity(600);
+
 	while (true)
 	{
 		updateDrive();
@@ -739,6 +903,10 @@ void opcontrol() {
 		updateDoinker();
 		updateForceOpen();
 		updateLadyBrown();
-		pros::delay(10);
+
+		// THIS IS ALLWAYS LAST
+		UpdateColorSort();
+
+		pros::delay(1);
 	}
 }
