@@ -107,6 +107,16 @@ bool ejectBlue = true;
 int colorFloor = 0;
 int colorCeiling = 0;
 
+
+#define STOP_VOLTAGE -12000
+#define BLUE_TIME 250
+#define RED_TIME 300
+#define RED_CEILING 35
+#define RED_FLOOR 0
+#define BLUE_CEILING 220
+#define BLUE_FLOOR 140
+int delayTime = 0;
+
 void initialize()
 {
 
@@ -221,26 +231,31 @@ void initialize()
 	opticalSensor.setLedPWM(100);
 
 	if (ejectBlue)
-	{
-		colorFloor = 140;
-		colorCeiling = 220;
-	}
-	else
-	{
-		colorFloor = 0;
-		colorCeiling = 27;
-	}
+			{
+				colorFloor = BLUE_FLOOR;
+				colorCeiling = BLUE_CEILING;
+				delayTime = BLUE_TIME;
+			}
+			else
+			{
+				colorFloor = RED_FLOOR;
+				colorCeiling = RED_CEILING;
+				delayTime = RED_TIME;
+			}
 }
 
 void disabled() {}
 
 void competition_initialize() {}
 
+
+ASSET(redpos_txt);
+
 void autonomous()
 {
 	odomChassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
 	odomChassis->setMaxVelocity(400);
-	autonNumber = 0;
+	autonNumber = 2;
 	switch (autonNumber)
 	{
 	/////////////////////////////////////////////////////////////////////
@@ -305,74 +320,6 @@ void autonomous()
 		pros::delay(800);
 		doinker.set_value(HIGH);
 
-		/*
-	llchassis.setPose(-24,0,315);
-
-	 int maxspeed = 60.0f;
-		//starting at 0, 12+8, 45 deg
-		//move backwards to mogo and grab
-		clamp.set_value(LOW);
-		llchassis.moveToPoint(-2, -28,2000, {.forwards = false,.maxSpeed = 60.0f});
-		pros::delay(1500);
-		clamp.set_value(HIGH);
-		pros::delay(250);
-		llchassis.turnToHeading(270,500);
-	intake.moveVoltage((
-		(12000)));
-	stage2.moveVoltage((
-		0.9 * ((12000))));
-
-pros::delay(500);
-//grab the 2 stack
-		llchassis.moveToPoint(-24,-24,1500, {.maxSpeed = 60.0f});
-pros::delay(1000);
-
-//turn towards the 2x2x2 stack
-llchassis.turnToHeading(155,600);//148
-pros::delay(600);
-
-llchassis.setPose(0,0,0);
-
-clamp.set_value(LOW);
-pros::delay(500);
-
-llchassis.moveToPoint(0,15,1500,{.maxSpeed = 60.0f});
-			//get the doughnut from the 2x2x2
-pros::delay(1100);
-stage2.moveVoltage(0);
-
-
-			//SWIRL
-			llchassis.moveToPoint(-12,-38,2700,{.maxSpeed = 80.0f});
-pros::delay(2700);
-
-//turn to disrupt
-			llchassis.turnToHeading(45,500);// not fa enough 75
-			pros::delay(500);
-			llchassis.setPose(0,0,0);
-
-
-			llchassis.moveToPoint(0,-19,1000,{.forwards = false,.maxSpeed = 80.0f});
-
-			llchassis.turnToHeading(240,500);
-
-			pros::delay(500);
-
-						llchassis.setPose(0,0,0);
-						llchassis.moveToPoint(0,-12,2000,{.forwards = false,.maxSpeed = 80.0f});
-
-
-pros::delay(2000);
-
-			stage2.moveVoltage((((12000 ))));
-			pros::delay(1000);
-			stage2.moveVoltage(0);
-			llchassis.setPose(0,0,0);
-			//toutch pole
-			llchassis.moveToPoint(0,35,1000, {.maxSpeed = 80.0f});
-			 ladyBrown.moveAbsolute(-907*2.5, 100);
-			 pros::delay(2000);
-			 */
 		break;
 	}
 
@@ -432,248 +379,54 @@ pros::delay(2000);
 			0.9 * ((12000))));
 		pros::delay(1000);
 		stage2.moveVoltage(0);
-		// touch bar
-		// llchassis.moveToPoint(0,-24,2000,{.maxSpeed = 100.0f});
-		// pros::delay(2000);
-
-		/*
-	llchassis.setPose(-24,0,315);
-
-		//starting at 0, 12+8, 45 deg
-		//move backwards to mogo and grab
-		clamp.set_value(LOW);
-		llchassis.moveToPoint(-3, -27,2000, {.forwards = false,.maxSpeed = 60.0f});
-		pros::delay(1500);
-		clamp.set_value(HIGH);
-		pros::delay(500);
-
-		llchassis.turnToHeading(0,1000);
-	intake.moveVoltage((
-		(12000)));
-	stage2.moveVoltage((
-		0.9 * ((12000))));
-
-pros::delay(1000);
-		llchassis.moveToPoint(10,8,1000, {.maxSpeed = 60.0f});
-pros::delay(2000);
-
-llchassis.turnToHeading(90,1000);
-pros::delay(1000);
-clamp.set_value(LOW);
-pros::delay(500);
-
-//works till here
-			llchassis.setPose(0,0,-45);
-			llchassis.turnToHeading(0,1500);
-			llchassis.moveToPoint(0,15,1500,{.maxSpeed = 60.0f});
-			//get the doughnut from the 2x2x2
-pros::delay(1300);
-		stage2.moveVoltage(0);
-
-
-
-
-		 //swirl
-			llchassis.moveToPoint(24,-5,3000,{.forwards = false,.maxSpeed = 80.0f});
-			pros::delay(3000);
-						llchassis.moveToPoint(24,-25,3000,{.forwards = false,.maxSpeed = 80.0f});
-
-			//turn to disrupt
-			llchassis.turnToHeading(235,1000);
-
-			llchassis.setPose(0,0,0);
-			llchassis.moveToPoint(0,-28,2000,{.forwards = false,.maxSpeed = 60.0f});
-
-			llchassis.turnToHeading(90,1000);
-			pros::delay(1000);
-
-			llchassis.moveToPoint(50,-25,2000,{.forwards = false,.maxSpeed = 40.0f});
-			pros::delay(1200);
-			stage2.moveVoltage((((12000 ))));
-			pros::delay(1000);
-			stage2.moveVoltage(0);
-			llchassis.setPose(0,0,0);
-			//toutch pole
-			llchassis.moveToPoint(0,35,1000, {.maxSpeed = 60.0f});
-			 ladyBrown.moveAbsolute(-907 * 2, 100);
-			 pros::delay(2000);
-			/*
-
-			llchassis.moveToPoint(25,-40,1000,{.forwards = false,.maxSpeed = 60.0f});
-
-*/
-
-		/*
-llchassis.moveToPoint(18,8,1000, {.maxSpeed = 60.0f});
-pros::delay(1200);
-
-intake.moveVoltage(0);
-
-		//move all the way back
-		llchassis.moveToPoint(-30,-20,4000, {.forwards = false,.maxSpeed = 70.0f});
-		pros::delay(2000);
-
-		llchassis.turnToHeading(0,1000);
-pros::delay(1000);
-				llchassis.moveToPoint(-30,-40,4000, {.forwards = false,.maxSpeed = 60.0f});
-				pros::delay(750);
-		llchassis.turnToHeading(90,1000);
-		pros::delay(500);
-		llchassis.moveToPoint(-50,-40,1000,{.forwards = false,.maxSpeed = 60.0f});
-		pros::delay(1000);
-		intake.moveVoltage((
-		12000));
-	stage2.moveVoltage((
-		0.9 * ((12000 ))));
-	pros::delay(10000);
-	llchassis.moveToPoint(26,-40,1000,{.maxSpeed = 60.0f});
-	*/
-
 		break;
 	}
-
+	
 	/////////////////////////////////////////////////////////////////////
-	// NEG RED AUTON (Prev discord)///////////////////////////////////////////////////////
+	// RED POS SIDE///////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	case 2:
 	{
-		llchassis.setPose(0, 0, 0);
-
-		// goal rush
-		llchassis.moveToPoint(0, 42, 2000, {.maxSpeed = 100.0f});
-		pros::delay(2000);
-
-		// turn to allign doinker with goal
-		llchassis.turnToHeading(-75, 1000, {.maxSpeed = 100});
-		pros::delay(1000);
-
-		// get goal
-		doinker.set_value(HIGH);
-		pros::delay(1000);
-
-		// turn back on axis
-		llchassis.turnToHeading(15, 1000, {.maxSpeed = 100});
-		pros::delay(1000);
-
-		llchassis.setPose(0, 42, 0);
-
-		// go back to origin with the goal
-		llchassis.moveToPoint(-12, 0, 2000, {.forwards = false, .maxSpeed = 100.0f});
-		pros::delay(2000);
-
-		doinker.set_value(LOW);
-		pros::delay(1000);
-
-		llchassis.setPose(0, 0, 45);
-
-		llchassis.turnToHeading(165, 1000, {.maxSpeed = 100});
-		pros::delay(1000);
-
-		llchassis.setPose(0, 0, 135);
-		llchassis.moveToPoint(-24, 24, 2000, {.forwards = false, .maxSpeed = 100.0f});
-		pros::delay(2000);
-
-		/*
-			llchassis.setPose(0,0,0);
-			llchassis.moveToPoint(0,-38,2000,{.forwards = false,.maxSpeed = 60.0f});
-			pros::delay(2000);
-			llchassis.turnToHeading(90,1000);
-			pros::delay(1000);
-			llchassis.moveToPoint(-4,-48,800,{.forwards = false,.maxSpeed = 60.0f});
-			pros::delay(800);
+		llchassis.setPose(0,0,0);
+	
+	
+    llchassis.moveToPoint(0, -23, 1000,{.forwards = false,.maxSpeed = 80});
+	pros::delay(1000);
+	llchassis.moveToPoint(-9,-44,1000,{.forwards = false,.maxSpeed = 80});
+	pros::delay(1400);
 			clamp.set_value(HIGH);
-			pros::delay(500);
-			stage2.moveVoltage(12000);
-			pros::delay(400);
-			llchassis.turnToHeading(0,1000);
 			pros::delay(1000);
-			clamp.set_value(LOW);
-			pros::delay(200);
-			llchassis.moveToPoint(-4,-36,1000,{.forwards = false,.maxSpeed = 60.0f});
-			pros::delay(1000); //tune this so it doesnt intake the ring all the way
+			stage2.moveVoltage((
+			0.9 * ((12000))));
+			llchassis.turnToHeading(-15,1000);
+			pros::delay(1000);
+			llchassis.moveToPoint(-12,-33,2000,{.maxSpeed = 80}); //orig -34
+			pros::delay(1000);
 			stage2.moveVoltage(0);
-			llchassis.turnToHeading(90,1000);
+			llchassis.turnToHeading(270,1000,{.maxSpeed = 80});
 			pros::delay(1000);
-			llchassis.moveToPoint(-16,-36,1000,{.forwards = false,.maxSpeed = 60.0f});
-			pros::delay(1000);
-			clamp.set_value(HIGH);
-			pros::delay(200);
-			stage2.moveVoltage(12000);
-			pros::delay(1000);
-*/
-		break;
-	}
-	// blue side temp auton
-	case 3:
-	{
-		llchassis.setPose(-24, 0, 315);
+			
+			stage2.moveVoltage((0));
+						clamp.set_value(LOW);
+						pros::delay(1000);
+						llchassis.setPose(0,0,0);
 
-		int maxspeed = 60.0f;
-		// starting at 0, 12+8, 45 deg
-		// move backwards to mogo and grab
-		clamp.set_value(LOW);
-		llchassis.moveToPoint(-2, -28, 2000, {.forwards = false, .maxSpeed = 60.0f});
-		pros::delay(1500);
-		clamp.set_value(HIGH);
-		pros::delay(250);
-		llchassis.turnToHeading(270, 500);
-		intake.moveVoltage((
-			(12000)));
-		stage2.moveVoltage((
+						llchassis.turnToHeading(170,2000,{.maxSpeed = 100});
+						pros::delay(1000);
+
+						llchassis.moveToPoint(0,22,2000,{.forwards = false,.maxSpeed = 100});
+						pros::delay(700);
+
+						clamp.set_value(HIGH);
+						pros::delay(1000);
+
+			stage2.moveVoltage((
 			0.9 * ((12000))));
+pros::delay(2000);
 
-		pros::delay(500);
-		// grab the 2 stack
-		llchassis.moveToPoint(-24, -24, 1500, {.maxSpeed = 60.0f});
-		pros::delay(1000);
 
-		// turn towards the 2x2x2 stack
-		llchassis.turnToHeading(148, 800);
-		pros::delay(800);
 
-		llchassis.setPose(0, 0, 0);
 
-		llchassis.moveToPoint(0, 15, 1500, {.maxSpeed = 60.0f});
-		// get the doughnut from the 2x2x2
-		pros::delay(1100);
-
-		break;
-	}
-	// red side temp auton
-	case 4:
-	{
-		llchassis.setPose(0, 0, 0);
-
-		// starting at 0, 12+8, 45 deg
-		// move backwards to mogo and grab
-		llchassis.moveToPoint(0, -42, 2000, {.forwards = false, .maxSpeed = 70.0f});
-		pros::delay(2000);
-		clamp.set_value(HIGH);
-		pros::delay(500);
-
-		stage2.moveVoltage((
-			0.9 * ((12000))));
-		pros::delay(2000);
-
-		llchassis.turnToHeading(180, 1500);
-		pros::delay(1500);
-		llchassis.moveToPoint(0, -66, 2000, {.maxSpeed = 70.0f});
-		pros::delay(2000);
-		break;
-	}
-	case 5:
-	{
-		llchassis.setPose(0, 0, 0);
-		llchassis.moveToPoint(0, -36, 1200, {.forwards = false, .maxSpeed = 60.0f});
-		pros::delay(1200);
-		clamp.set_value(HIGH);
-		pros::delay(200);
-
-		stage2.moveVoltage(12000);
-		llchassis.turnToHeading(270, 1000);
-		pros::delay(1000);
-		llchassis.moveToPoint(24, -36, 1000, {.maxSpeed = 80.0f});
-		pros::delay(1000);
 
 		break;
 	}
@@ -830,8 +583,12 @@ void updateLadyBrown() // flat
 bool colorSortOn = true;
 bool colorSortToggle = false;
 bool colorSortSwitchToggle = false;
+
+
+
 void UpdateColorSort()
 {
+	
 	if (controller.getDigital(ControllerDigital::up))
 	{
 		if (!colorSortToggle)
@@ -854,13 +611,15 @@ void UpdateColorSort()
 
 			if (ejectBlue)
 			{
-				colorFloor = 140;
-				colorCeiling = 220;
+				colorFloor = BLUE_FLOOR;
+				colorCeiling = BLUE_CEILING;
+				delayTime = BLUE_TIME;
 			}
 			else
 			{
-				colorFloor = 0;
-				colorCeiling = 35;
+				colorFloor = RED_FLOOR;
+				colorCeiling = RED_CEILING;
+				delayTime = RED_TIME;
 			}
 		}
 		else
@@ -873,7 +632,7 @@ void UpdateColorSort()
 
 		if (millis < waitReactivateTime)
 		{
-			stage2.moveVoltage((0));
+			stage2.moveVoltage((STOP_VOLTAGE));
 		}
 		else
 		{
@@ -882,9 +641,9 @@ void UpdateColorSort()
 				blue = true;
 				ejectBlueTime = millis;
 			}
-			if (blue && millis >= ejectBlueTime + 150)
+			if (blue && millis >= ejectBlueTime + BLUE_TIME)
 			{
-				stage2.moveVoltage((0));
+				stage2.moveVoltage((STOP_VOLTAGE));
 				blue = false;
 				waitReactivateTime = millis + 235;
 			}
