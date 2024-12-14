@@ -255,7 +255,7 @@ void autonomous()
 {
 	odomChassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
 	odomChassis->setMaxVelocity(400);
-	autonNumber = 2;
+	autonNumber = 0;
 	switch (autonNumber)
 	{
 	/////////////////////////////////////////////////////////////////////
