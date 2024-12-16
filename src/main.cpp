@@ -255,7 +255,7 @@ void autonomous()
 {
 	odomChassis->getOdometry()->setState({0_in, 0_in, 0_deg}); // zero the position of the robot
 	odomChassis->setMaxVelocity(400);
-	autonNumber = 0;
+	autonNumber = 3;
 	switch (autonNumber)
 	{
 	/////////////////////////////////////////////////////////////////////
@@ -263,7 +263,7 @@ void autonomous()
 	////////////////////////////////////////////////////////////////////
 	case 0:
 	{
-
+		ejectBlue = false;
 		llchassis.setPose(0, 0, 180);
 
 		// move to get first mogo
@@ -298,7 +298,7 @@ void autonomous()
 		pros::delay(2000);
 
 		// move the allicance stake blockage
-		llchassis.moveToPoint(-27, 14, 2000, {.forwards = false, .maxSpeed = 100.0f});
+		llchassis.moveToPoint(-26, 14, 2000, {.forwards = false, .maxSpeed = 100.0f});
 		pros::delay(2000);
 
 		// allign to score alliance stake
@@ -328,10 +328,11 @@ void autonomous()
 	////////////////////////////////////////////////////////////////////
 	case 1:
 	{
+		ejectBlue = true;
 		llchassis.setPose(0, 0, 180);
 
 		// move to get first mogo
-		llchassis.moveToPoint(0, 36, 1200, {.forwards = false, .maxSpeed = 70.0f});
+		llchassis.moveToPoint(0, 33, 1200, {.forwards = false, .maxSpeed = 70.0f});
 		pros::delay(1200);
 
 		// get mogo
@@ -344,7 +345,7 @@ void autonomous()
 		stage2.moveVoltage((
 			0.9 * ((12000))));
 		// Get first two stack
-		llchassis.moveToPoint(-20, 36, 2000, {.maxSpeed = 100.0f});
+		llchassis.moveToPoint(-20, 33, 2000, {.maxSpeed = 100.0f});
 		pros::delay(2000);
 
 		// turn to 4 stack
@@ -354,7 +355,7 @@ void autonomous()
 		// get 4 stack
 		clamp.set_value(LOW);
 		llchassis.moveToPoint(-20, 46, 850, {.maxSpeed = 100.0f});
-		pros::delay(850);
+		pros::delay(1000);
 		stage2.moveVoltage(0);
 
 		// return to origin
@@ -379,6 +380,8 @@ void autonomous()
 			0.9 * ((12000))));
 		pros::delay(1000);
 		stage2.moveVoltage(0);
+		doinker.set_value(HIGH);
+		llchassis.moveToPoint(0, -24, 1000, {.maxSpeed = 100.0f});
 		break;
 	}
 	
@@ -387,6 +390,7 @@ void autonomous()
 	////////////////////////////////////////////////////////////////////
 	case 2:
 	{
+		ejectBlue = true;
 		llchassis.setPose(0,0,0);
 	
 	
@@ -428,6 +432,57 @@ pros::delay(2000);
 
 
 
+		break;
+	}
+
+	//DANNY
+	case 3:
+	{
+		ejectBlue = true;
+		llchassis.setPose(0, 0, 180);
+
+		// move to get first mogo
+		llchassis.moveToPoint(0, 33, 1200, {.forwards = false, .maxSpeed = 70.0f});
+		pros::delay(1200);
+
+		// get mogo
+		clamp.set_value(HIGH);
+		pros::delay(700);
+
+		llchassis.turnToHeading(270, 700, {.maxSpeed = 100});
+		pros::delay(700);
+
+		stage2.moveVoltage((
+			0.9 * ((12000))));
+		// Get first two stack
+		llchassis.moveToPoint(-20, 33, 2000, {.maxSpeed = 100.0f});
+		pros::delay(2000);
+
+		// turn to 4 stack
+		llchassis.turnToHeading(0, 800, {.maxSpeed = 100});
+		pros::delay(800);
+
+		// get 4 stack
+		llchassis.moveToPoint(-20, 46, 850, {.maxSpeed = 100.0f});
+		pros::delay(2000);
+		
+				stage2.moveVoltage(0);
+
+		//llchassis.moveToPoint(-20, 40, 850, {.forwards = false, .maxSpeed = 100.0f});
+		pros::delay(1000);
+
+		
+		//llchassis.turnToHeading(-45,1000,{.maxSpeed = 100});
+	    pros::delay(1000);
+
+	    //llchassis.moveToPoint(-26,46,850,{.maxSpeed = 100});
+		pros::delay(1500);
+
+		// return to origin
+		llchassis.moveToPoint(0, 12, 2000, {.forwards = false, .maxSpeed = 100.0f});
+		pros::delay(2000);
+
+		break;
 		break;
 	}
 	// tune PID
@@ -664,7 +719,7 @@ void opcontrol()
 		updateLadyBrown();
 
 		// THIS IS ALLWAYS LAST
-		UpdateColorSort();
+		//UpdateColorSort();
 
 		pros::delay(1);
 	}
